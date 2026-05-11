@@ -12,6 +12,8 @@ Northwall fits the searches buyers are already making: agentic SOC, multi-agent 
 
 ## Demo
 
+![Northwall landing page](docs/screenshots/landing-page.png)
+
 [Watch the 15-second walkthrough](docs/northwall-agentic-soc-demo.mp4)
 
 <video src="docs/northwall-agentic-soc-demo.mp4" controls width="100%"></video>
@@ -143,6 +145,7 @@ Open:
 
 ```text
 http://localhost:3000
+http://localhost:3000/workspace
 ```
 
 ## Production Auth

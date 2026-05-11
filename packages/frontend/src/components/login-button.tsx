@@ -59,14 +59,14 @@ export function LoginButton() {
             if (retryError) {
               setError("Account created. Confirm it from your email, then sign in.");
             } else {
-              window.location.href = "/";
+              window.location.href = "/workspace";
             }
           }
         } else {
           setError(signInError.message);
         }
       } else {
-        window.location.href = "/";
+        window.location.href = "/workspace";
       }
     } else {
       // Magic link / OTP
