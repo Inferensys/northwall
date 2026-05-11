@@ -46,10 +46,10 @@ function SignalField() {
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-[#00150f] px-4 py-6 text-[#051914] sm:px-8 sm:py-10">
-      <section className="mx-auto flex min-h-[calc(100vh-80px)] max-w-6xl items-center">
-        <div className="w-full overflow-hidden border border-white/20 bg-white shadow-[0_40px_120px_rgba(0,0,0,0.32)]">
-          <header className="flex h-16 items-center justify-between border-b border-[#dfe4dd] px-5 sm:px-7">
+    <main className="min-h-screen bg-white text-[#051914]">
+      <section className="min-h-screen">
+        <div className="grid min-h-screen grid-rows-[auto_auto_1fr_auto] bg-white">
+          <header className="flex h-16 items-center justify-between border-b border-[#dfe4dd] px-5 sm:px-10 lg:px-14">
             <Link href="/" className="flex items-center gap-3">
               <NorthwallMark size={26} className="text-[#051914]" />
               <NorthwallLogo className="text-lg" />
@@ -64,17 +64,17 @@ export default function LandingPage() {
 
           <SignalField />
 
-          <div className="grid md:grid-cols-[1fr_360px]">
-            <section className="px-5 py-9 sm:px-8 sm:py-12">
-              <h1 className="max-w-3xl font-serif text-[3.15rem] font-normal leading-[0.93] text-[#051914] sm:text-[5rem] md:text-[5.7rem]">
+          <div className="grid min-h-0 md:grid-cols-[1fr_380px] xl:grid-cols-[1fr_430px]">
+            <section className="px-5 py-10 sm:px-10 sm:py-14 lg:px-14">
+              <h1 className="max-w-4xl font-serif text-[3.2rem] font-normal leading-[0.93] text-[#051914] sm:text-[5.5rem] lg:text-[6.7rem] xl:text-[7.4rem]">
                 Turn SOC alerts into owner-ready work.
               </h1>
-              <p className="mt-7 max-w-2xl text-base leading-7 text-[#31413b] sm:text-lg">
+              <p className="mt-7 max-w-2xl text-base leading-7 text-[#31413b] sm:text-lg lg:text-xl lg:leading-8">
                 Northwall runs specialist agents across source context, evidence, and ownership. Analysts approve the plan before issues are created.
               </p>
             </section>
 
-            <aside className="flex border-t border-[#dfe4dd] p-5 md:border-l md:border-t-0 sm:p-7">
+            <aside className="flex border-t border-[#dfe4dd] p-5 md:border-l md:border-t-0 sm:p-8 lg:p-10">
               <Link
                 href="/workspace"
                 className="group mt-auto flex w-full items-center justify-between border border-[#dfe4dd] bg-[#fbfcfa] px-4 py-4 text-left transition-colors hover:border-[#051914]"
@@ -91,7 +91,7 @@ export default function LandingPage() {
             {steps.map(([number, title, body]) => (
               <article
                 key={title}
-                className="min-h-36 border-b border-[#dfe4dd] p-5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0"
+                className="min-h-36 border-b border-[#dfe4dd] p-5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0 lg:px-10"
               >
                 <div className="font-display text-xs text-[#68736d]">{number}</div>
                 <h2 className="mt-5 text-sm font-semibold text-[#051914]">{title}</h2>
