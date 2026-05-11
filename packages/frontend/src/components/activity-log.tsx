@@ -5,7 +5,7 @@ import { useMissionStore, buildDisplayNameMap } from "@/store/mission-store";
 import { Markdown } from "@/components/markdown";
 import { cn, formatTime, formatDuration } from "@/lib/utils";
 import { ChevronRight, ChevronDown } from "lucide-react";
-import type { SessionEvent, EventType } from "@stallion/shared";
+import type { SessionEvent, EventType } from "@northwall/shared";
 
 // ─── Filters ─────────────────────────────────────────────────────────────────
 

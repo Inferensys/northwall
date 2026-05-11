@@ -2,7 +2,7 @@
 
 import { useMissionStore } from "@/store/mission-store";
 import { cn } from "@/lib/utils";
-import type { MissionAgentStatus } from "@stallion/shared";
+import type { MissionAgentStatus } from "@northwall/shared";
 
 const STATUS_COLORS: Record<MissionAgentStatus, string> = {
   idle: "text-text-muted",

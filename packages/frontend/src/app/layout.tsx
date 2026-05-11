@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -8,10 +8,16 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-display",
+});
+
 export const metadata: Metadata = {
-  title: "Stallion — Agentic workflows that ship",
+  title: "Northwall — Multi-agent AppSec orchestration",
   description:
-    "Assemble AI agent teams that execute your workflows end-to-end.",
+    "Map owned applications, plan authorized AppSec assessments, and coordinate remediation with multi-agent system graphs.",
 };
 
 export default function RootLayout({
@@ -20,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`dark ${inter.variable}`}>
+    <html lang="en" className={`dark ${inter.variable} ${spaceGrotesk.variable}`}>
       <body className="antialiased font-sans">{children}</body>
     </html>
   );

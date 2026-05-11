@@ -70,7 +70,7 @@ function buildOrchestratorPrompt(plan: MissionPlan): string {
 
   const parallelAnalysis = buildParallelAnalysis(plan.tasks);
 
-  return `You are the Mission Orchestrator for Stallion. You are executing the following mission plan.
+  return `You are the Mission Orchestrator for Northwall. You are executing the following mission plan.
 
 ## Mission: ${plan.title}
 **Objective:** ${plan.objective}
@@ -235,7 +235,7 @@ export class Executor {
         id: nanoid(),
         sessionId: missionId,
         type: "session_completed",
-        summary: "Mission completed successfully",
+        summary: "Assessment completed successfully",
         timestamp: Date.now(),
       });
     } catch (err) {

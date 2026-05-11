@@ -35,7 +35,7 @@ export const authMiddleware = createMiddleware(async (c, next) => {
   if (process.env.DEV_AUTH_BYPASS === "true") {
     c.set("auth", {
       userId: "dev-user-001",
-      email: "dev@stallion.local",
+      email: "dev@northwall.local",
     });
     return next();
   }

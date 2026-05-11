@@ -1,748 +1,712 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { Playfair_Display } from "next/font/google";
-import { Dashboard } from "@/components/dashboard";
-import { Sidebar } from "@/components/sidebar";
-import { Markdown } from "@/components/markdown";
-import { useSocket } from "@/hooks/use-socket";
-import { useAuth } from "@/hooks/use-auth";
-import { useMissionStore, type ExplorationFeedEntry } from "@/store/mission-store";
-import { cn, formatTime } from "@/lib/utils";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { io, type Socket } from "socket.io-client";
+import {
+  AlertCircle,
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  CircleDot,
+  GitBranch,
+  Github,
+  GitPullRequest,
+  Loader2,
+  Network,
+  Play,
+  Search,
+  ShieldCheck,
+  SquareKanban,
+  Workflow,
+} from "lucide-react";
+import type {
+  Assessment,
+  AssessmentEvent,
+  AssessmentPhase,
+  GitHubRepository,
+  RepositoryConnection,
+  VulnerabilityFinding,
+} from "@northwall/shared";
+import { NorthwallMark } from "@/components/logo";
 import { authFetch } from "@/lib/api";
-import type { Mission, ChatMessage } from "@stallion/shared";
+import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 
-const logoFont = Playfair_Display({
-  weight: "700",
-  subsets: ["latin"],
-  style: "italic",
-  display: "swap",
-});
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4000";
+const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === "true";
 
-const headingFont = Playfair_Display({
-  weight: "600",
-  subsets: ["latin"],
-  style: "normal",
-  display: "swap",
-});
+const phases: Array<{ id: AssessmentPhase; label: string }> = [
+  { id: "connect_repo", label: "Connect repo" },
+  { id: "repo_selected", label: "Repo selected" },
+  { id: "understanding", label: "Understanding" },
+  { id: "plan_ready", label: "Plan approval" },
+  { id: "approved", label: "Approved" },
+  { id: "running", label: "Execution" },
+  { id: "findings_ready", label: "Findings" },
+  { id: "issues_created", label: "Issues" },
+];
 
-const STORAGE_KEY = "stallion-mission-id";
-const SIDEBAR_KEY = "stallion-sidebar";
-const PORTFOLIO_MODE = process.env.NEXT_PUBLIC_PORTFOLIO_MODE === "true";
-const ONE_DAY_MS = 86_400_000;
-
-type LandingPhase = "idle" | "exploring" | "planning" | "entering";
-
-interface ExplorationMessage {
-  id: string;
-  role: "user" | "assistant" | "activity";
-  content: string;
-  timestamp: number;
-  feed?: ExplorationFeedEntry[];
-}
-
-const STATUS_COLORS: Record<string, string> = {
-  exploring: "bg-accent",
-  planning: "bg-warning",
-  review: "bg-warning",
-  launching: "bg-info",
-  running: "bg-success",
-  paused: "bg-text-muted",
-  completed: "bg-info",
-  failed: "bg-error",
+const severityStyles: Record<VulnerabilityFinding["severity"], string> = {
+  low: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  medium: "border-amber-200 bg-amber-50 text-amber-700",
+  high: "border-rose-200 bg-rose-50 text-rose-700",
+  critical: "border-red-300 bg-red-50 text-red-700",
 };
 
-function readinessLabel(score: number): string {
-  if (score <= 3) return "Exploring";
-  if (score <= 6) return "Getting clearer";
-  if (score <= 8) return "Almost ready";
-  return "Ready to plan";
+function phaseIndex(phase: AssessmentPhase | null): number {
+  if (!phase) return 0;
+  return Math.max(0, phases.findIndex((item) => item.id === phase));
 }
 
-function readinessColor(score: number): string {
-  if (score <= 3) return "bg-accent";
-  if (score <= 6) return "bg-warning";
-  return "bg-success";
+function phaseComplete(current: AssessmentPhase | null, phase: AssessmentPhase): boolean {
+  return phaseIndex(current) >= phaseIndex(phase);
 }
 
-function ReadinessIndicator({ score }: { score: number }) {
-  const pct = Math.round((score / 10) * 100);
+function Panel({
+  title,
+  icon: Icon,
+  children,
+  className,
+}: {
+  title: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex-1 h-1.5 bg-bg-elevated rounded-full overflow-hidden">
-        <div
-          className={cn("h-full rounded-full transition-all duration-500", readinessColor(score))}
-          style={{ width: `${pct}%` }}
-        />
+    <section className={cn("rounded-lg border border-slate-200 bg-white", className)}>
+      <div className="flex h-12 items-center gap-2 border-b border-slate-200 px-4">
+        {Icon && <Icon className="h-4 w-4 text-slate-500" />}
+        <h2 className="text-sm font-semibold text-slate-950">{title}</h2>
       </div>
-      <span className="text-xs text-text-muted whitespace-nowrap">
-        {readinessLabel(score)}
-      </span>
+      {children}
+    </section>
+  );
+}
+
+function EmptyState({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="grid min-h-[180px] place-items-center px-6 py-8 text-center text-sm leading-6 text-slate-500">
+      {children}
     </div>
   );
 }
 
-const EXAMPLES = [
-  {
-    icon: (
-      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="3" width="20" height="14" rx="2" />
-        <path d="M8 21h8" /><path d="M12 17v4" />
-        <path d="M7 8l3 3-3 3" /><path d="M13 14h4" />
-      </svg>
-    ),
-    title: "Build a full-stack app",
-    prompt: "Build a modern task management app with Next.js, real-time updates, and a clean dashboard UI",
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7" />
-        <rect x="15" y="15" width="6" height="6" rx="1" />
-        <path d="M9 9h6" /><path d="M9 13h3" />
-      </svg>
-    ),
-    title: "Design a landing page",
-    prompt: "Design and build a conversion-optimized SaaS landing page with hero, features, testimonials, and pricing sections",
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 3v18h18" />
-        <path d="M7 17l4-8 4 4 5-10" />
-      </svg>
-    ),
-    title: "Analyze & visualize data",
-    prompt: "Analyze this dataset for trends and anomalies, create visualizations, and write a summary report with key insights",
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 5v14" /><path d="M18 11l-6-6-6 6" />
-        <path d="M4 21h16" />
-        <circle cx="19" cy="5" r="3" />
-      </svg>
-    ),
-    title: "Ship an API",
-    prompt: "Design and implement a RESTful API with authentication, rate limiting, OpenAPI docs, and integration tests",
-  },
-];
-
 export default function Home() {
-  const { user } = useAuth();
-  const [phase, setPhase] = useState<LandingPhase>("idle");
-  const [missionId, setMissionId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [taskInput, setTaskInput] = useState("");
-  const [missions, setMissions] = useState<Mission[]>([]);
-  const [resuming, setResuming] = useState(true);
-  const [messages, setMessages] = useState<ExplorationMessage[]>([]);
-  const [readiness, setReadiness] = useState(0);
-  const [chatInput, setChatInput] = useState("");
-  const [sending, setSending] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const reset = useMissionStore((s) => s.reset);
-  const visibleMissions = PORTFOLIO_MODE
-    ? missions.filter((m) => m.status !== "failed" && Date.now() - m.createdAt < ONE_DAY_MS)
-    : missions;
+  const [connection, setConnection] = useState<RepositoryConnection | null>(null);
+  const [repos, setRepos] = useState<GitHubRepository[]>([]);
+  const [selectedRepoId, setSelectedRepoId] = useState<number | null>(null);
+  const [branch, setBranch] = useState("main");
+  const [assessment, setAssessment] = useState<Assessment | null>(null);
+  const [events, setEvents] = useState<AssessmentEvent[]>([]);
+  const [selectedFindingIds, setSelectedFindingIds] = useState<Set<string>>(new Set());
+  const [previewFindingId, setPreviewFindingId] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Exploration streaming state from store (fed by WebSocket)
-  const explorationFeed = useMissionStore((s) => s.explorationFeed);
-  const clearExplorationStream = useMissionStore((s) => s.clearExplorationStream);
-  const storeReadiness = useMissionStore((s) => s.readinessScore);
+  const selectedRepo = useMemo(
+    () => repos.find((repo) => repo.id === selectedRepoId) ?? null,
+    [repos, selectedRepoId],
+  );
 
-  // Connect socket during exploration to receive streaming events
-  const socketMissionId = phase === "exploring" || phase === "planning" ? missionId : null;
-  useSocket(socketMissionId);
+  const previewFinding = useMemo(
+    () => assessment?.findings.find((finding) => finding.id === previewFindingId) ?? assessment?.findings[0] ?? null,
+    [assessment?.findings, previewFindingId],
+  );
 
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const refreshConnection = useCallback(async () => {
+    const res = await authFetch("/api/github/connection");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Could not read GitHub connection");
+    setConnection(data.connection);
+    return data.connection as RepositoryConnection;
   }, []);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages.length, explorationFeed.length, scrollToBottom]);
-
-  // Sync readiness from store (updated by WebSocket exploration_done)
-  useEffect(() => {
-    if (storeReadiness != null && storeReadiness > 0) {
-      setReadiness(storeReadiness);
+  const loadRepos = useCallback(async () => {
+    const res = await authFetch("/api/github/repos");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Could not list GitHub repos");
+    const nextRepos = (data.repos ?? []) as GitHubRepository[];
+    setRepos(nextRepos);
+    if (!selectedRepoId && nextRepos[0]) {
+      setSelectedRepoId(nextRepos[0].id);
+      setBranch(nextRepos[0].defaultBranch);
     }
-  }, [storeReadiness]);
+  }, [selectedRepoId]);
 
-  // Restore sidebar state
   useEffect(() => {
-    const saved = localStorage.getItem(SIDEBAR_KEY);
-    if (saved === "closed") setSidebarOpen(false);
-  }, []);
-
-  function toggleSidebar() {
-    setSidebarOpen((prev) => {
-      const next = !prev;
-      localStorage.setItem(SIDEBAR_KEY, next ? "open" : "closed");
-      return next;
-    });
-  }
-
-  // Fetch missions — always (for sidebar)
-  const fetchMissions = useCallback(() => {
-    authFetch("/api/missions")
-      .then((res) => res.json())
-      .then((data) => {
-        const list = (data.missions ?? []) as Mission[];
-        list.sort((a, b) => b.createdAt - a.createdAt);
-        setMissions(list);
+    refreshConnection()
+      .then((next) => {
+        if (next.connected) return loadRepos();
+        return null;
       })
-      .catch(() => setMissions([]));
-  }, []);
+      .catch((err) => setError(err instanceof Error ? err.message : String(err)));
+  }, [loadRepos, refreshConnection]);
 
   useEffect(() => {
-    fetchMissions();
-  }, [fetchMissions, phase]);
+    if (!selectedRepo) return;
+    setBranch(selectedRepo.defaultBranch);
+  }, [selectedRepo]);
 
-  // Poll mission list every 15s to keep sidebar status/timestamps fresh
   useEffect(() => {
-    const interval = setInterval(fetchMissions, 15_000);
-    return () => clearInterval(interval);
-  }, [fetchMissions]);
+    if (!assessment?.id) return;
 
-  // Auto-resume from localStorage
-  useEffect(() => {
-    const savedId = localStorage.getItem(STORAGE_KEY);
-    if (!savedId) {
-      setResuming(false);
-      return;
-    }
+    let socket: Socket | null = null;
+    let cancelled = false;
+    const assessmentId = assessment.id;
 
-    authFetch(`/api/missions/${savedId}`)
-      .then((res) => {
-        if (res.ok) return res.json();
-        throw new Error("not found");
-      })
-      .then(async (data) => {
-        const mission = data.mission as Mission;
-        if (!mission) {
-          localStorage.removeItem(STORAGE_KEY);
-          setResuming(false);
-          return;
-        }
-
-        if (mission.status === "exploring") {
-          setMissionId(savedId);
-          const chatRes = await authFetch(`/api/missions/${savedId}/chat`);
-          const chatData = await chatRes.json();
-          const chatMessages = (chatData.chat ?? []) as ChatMessage[];
-          const restored: ExplorationMessage[] = chatMessages.map((m) => ({
-            id: m.id,
-            role: m.role === "user" ? "user" as const : "assistant" as const,
-            content: m.content,
-            timestamp: m.timestamp,
-          }));
-          // If last message is from user (Aria never replied — e.g. page refresh mid-request),
-          // add a system note so the user knows they can send again
-          if (restored.length > 0 && restored[restored.length - 1]!.role === "user") {
-            restored.push({
-              id: `msg-system-resume`,
-              role: "assistant",
-              content: "*(Session resumed — you can send another message or continue exploring.)*",
-              timestamp: Date.now(),
-            });
-          }
-          setMessages(restored);
-          setReadiness(mission.readinessScore ?? 0);
-          setPhase("exploring");
-        } else {
-          enterMission(savedId);
-        }
-      })
-      .catch(() => {
-        localStorage.removeItem(STORAGE_KEY);
-      })
-      .finally(() => {
-        setResuming(false);
-      });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function enterMission(mid: string) {
-    reset();
-    localStorage.setItem(STORAGE_KEY, mid);
-    setMissionId(mid);
-    setPhase("entering");
-  }
-
-  function handleNewMission() {
-    setPhase("idle");
-    setMissionId(null);
-    setMessages([]);
-    setReadiness(0);
-    setTaskInput("");
-    localStorage.removeItem(STORAGE_KEY);
-  }
-
-  function handleSelectMission(m: Mission) {
-    if (m.status === "exploring") {
-      setMissionId(m.id);
-      localStorage.setItem(STORAGE_KEY, m.id);
-      authFetch(`/api/missions/${m.id}/chat`)
-        .then((r) => r.json())
-        .then((d) => {
-          const chatMsgs = (d.chat ?? []) as ChatMessage[];
-          setMessages(
-            chatMsgs.map((msg) => ({
-              id: msg.id,
-              role: msg.role === "user" ? "user" as const : "assistant" as const,
-              content: msg.content,
-              timestamp: msg.timestamp,
-            })),
-          );
-          setReadiness(m.readinessScore ?? 0);
-          setPhase("exploring");
-        });
-    } else {
-      enterMission(m.id);
-    }
-  }
-
-  async function startExploration() {
-    if (!taskInput.trim()) return;
-    setLoading(true);
-    try {
-      const res = await authFetch("/api/missions", { method: "POST" });
-      const data = await res.json();
-      const mid = data.mission.id as string;
-      setMissionId(mid);
-      localStorage.setItem(STORAGE_KEY, mid);
-
-      const userMsg: ExplorationMessage = {
-        id: `msg-user-0`,
-        role: "user",
-        content: taskInput.trim(),
-        timestamp: Date.now(),
-      };
-      setMessages([userMsg]);
-      setPhase("exploring");
-      setSending(true);
-      clearExplorationStream();
-
-      // Fire HTTP POST — WebSocket will deliver tokens/activities live
-      const exploreRes = await authFetch(`/api/missions/${mid}/explore`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: taskInput.trim() }),
-      });
-      const exploreData = await exploreRes.json();
-
-      // Snapshot feed before clearing — preserves interleaved text+tool order
-      const feed = useMissionStore.getState().explorationFeed.map(e => ({...e}));
-
-      // HTTP response is authoritative — finalize with clean text
-      const assistantMsg: ExplorationMessage = {
-        id: `msg-aria-0`,
-        role: "assistant",
-        content: exploreData.text,
-        timestamp: Date.now(),
-        feed: feed.length > 0 ? feed : undefined,
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
-      setReadiness(exploreData.readiness ?? 0);
-      clearExplorationStream();
-      setTaskInput("");
-    } catch (error) {
-      console.error("Failed to start exploration:", error);
-      clearExplorationStream();
-      setPhase("idle");
-    } finally {
-      setLoading(false);
-      setSending(false);
-    }
-  }
-
-  async function sendExplorationMessage() {
-    if (!chatInput.trim() || !missionId || sending) return;
-    const content = chatInput.trim();
-    setChatInput("");
-    setSending(true);
-    clearExplorationStream();
-
-    const userMsg: ExplorationMessage = {
-      id: `msg-user-${Date.now()}`,
-      role: "user",
-      content,
-      timestamp: Date.now(),
-    };
-    setMessages((prev) => [...prev, userMsg]);
-
-    try {
-      // Fire HTTP POST — WebSocket delivers tokens/activities live
-      const res = await authFetch(`/api/missions/${missionId}/explore`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
-      });
-      const data = await res.json();
-
-      // Snapshot feed before clearing — preserves interleaved text+tool order
-      const feed = useMissionStore.getState().explorationFeed.map(e => ({...e}));
-
-      // HTTP response is authoritative — finalize with clean text
-      const now = Date.now();
-      const assistantMsg: ExplorationMessage = {
-        id: `msg-aria-${now}`,
-        role: "assistant",
-        content: data.text,
-        timestamp: now,
-        feed: feed.length > 0 ? feed : undefined,
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
-      setReadiness(data.readiness ?? 0);
-      clearExplorationStream();
-    } catch (error) {
-      console.error("Failed to send exploration message:", error);
-      clearExplorationStream();
-    } finally {
-      setSending(false);
-    }
-  }
-
-  async function handleBeginPlanning() {
-    if (!missionId) return;
-    setPhase("planning");
-
-    try {
-      const res = await authFetch(`/api/missions/${missionId}/begin-planning`, {
-        method: "POST",
-      });
-      const data = await res.json();
-
-      if (data.mission) {
-        enterMission(missionId);
-      } else {
-        setPhase("exploring");
+    async function connect() {
+      let token: string | undefined;
+      if (!DEV_BYPASS) {
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        token = session?.access_token;
       }
-    } catch (error) {
-      console.error("Failed to begin planning:", error);
-      setPhase("exploring");
+      if (cancelled) return;
+
+      socket = io(BACKEND_URL, {
+        transports: ["websocket"],
+        auth: DEV_BYPASS ? { devBypass: true } : { token },
+      });
+      socket.on("connect", () => socket?.emit("join_assessment", assessmentId));
+      socket.on("assessment_state", (next: Assessment) => {
+        setAssessment(next);
+        setEvents(next.events ?? []);
+      });
+      socket.on("assessment_events_batch", (batch: AssessmentEvent[]) => setEvents(batch));
+      socket.on("assessment_event", (event: AssessmentEvent) => {
+        setEvents((current) => [...current, event].slice(-80));
+      });
+      socket.on("error", (payload: { message?: string } | string) => {
+        setError(typeof payload === "string" ? payload : payload.message ?? "Socket error");
+      });
+    }
+
+    connect();
+    return () => {
+      cancelled = true;
+      socket?.emit("leave_assessment", assessmentId);
+      socket?.disconnect();
+    };
+  }, [assessment?.id]);
+
+  async function connectGitHub() {
+    setBusy("connect");
+    setError(null);
+    try {
+      if (DEV_BYPASS) {
+        const next = await refreshConnection();
+        if (!next.connected) throw new Error("GitHub is not connected for this session.");
+      } else {
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        const providerToken = session?.provider_token;
+        if (!providerToken) throw new Error("GitHub OAuth token missing. Sign out and continue with GitHub again.");
+        const res = await authFetch("/api/github/connect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: providerToken }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "Could not connect GitHub");
+        setConnection(data.connection);
+      }
+      await loadRepos();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(null);
     }
   }
 
-  if (resuming) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-bg">
-        <p className="text-text-muted text-sm">Loading...</p>
-      </div>
-    );
+  async function createAssessment() {
+    if (!selectedRepo) return;
+    setBusy("create");
+    setError(null);
+    try {
+      const res = await authFetch("/api/assessments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ repository: selectedRepo, branch }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Could not create assessment");
+      setAssessment(data.assessment);
+      setEvents(data.assessment.events ?? []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(null);
+    }
   }
 
-  // Dashboard view — sidebar + dashboard
-  if (phase === "entering" && missionId) {
-    return (
-      <div className="flex h-screen bg-bg">
-        <Sidebar
-          missions={visibleMissions}
-          activeMissionId={missionId}
-          collapsed={!sidebarOpen}
-          user={user}
-          onToggle={toggleSidebar}
-          onNewMission={handleNewMission}
-          onSelectMission={handleSelectMission}
-        />
-        <div className="flex-1 min-w-0">
-          <Dashboard missionId={missionId} />
-        </div>
-      </div>
-    );
+  async function runStep(step: "understand" | "plan" | "approve" | "run") {
+    if (!assessment) return;
+    setBusy(step);
+    setError(null);
+    try {
+      const res = await authFetch(`/api/assessments/${assessment.id}/${step}`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? `Could not ${step}`);
+      setAssessment(data.assessment);
+      setEvents(data.assessment.events ?? []);
+      if (step === "run") {
+        const findings = (data.assessment.findings ?? []) as VulnerabilityFinding[];
+        setSelectedFindingIds(new Set(findings.map((finding) => finding.id)));
+        setPreviewFindingId(findings[0]?.id ?? null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(null);
+    }
   }
 
-  // Exploration chat view — sidebar + chat
-  if (phase === "exploring" || phase === "planning") {
-    const isPlanning = phase === "planning";
-
-    return (
-      <div className="flex h-screen bg-bg">
-        <Sidebar
-          missions={visibleMissions}
-          activeMissionId={missionId}
-          collapsed={!sidebarOpen}
-          user={user}
-          onToggle={toggleSidebar}
-          onNewMission={handleNewMission}
-          onSelectMission={handleSelectMission}
-        />
-        <div className="flex-1 min-w-0 flex flex-col">
-          {/* Header */}
-          <header className="border-b border-border px-6 py-3 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-4">
-              <span className="text-xs text-text-muted">Exploring your idea</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="w-48">
-                <ReadinessIndicator score={readiness} />
-              </div>
-              <button
-                onClick={handleBeginPlanning}
-                disabled={isPlanning || messages.length < 2}
-                className={cn(
-                  "rounded-lg px-4 py-2 text-sm font-semibold transition-all",
-                  isPlanning
-                    ? "bg-bg-elevated text-text-muted cursor-wait"
-                    : readiness >= 7
-                      ? "bg-success text-white hover:bg-success/90 shadow-[0_0_12px_rgba(34,197,94,0.3)]"
-                      : readiness >= 4
-                        ? "bg-accent text-white hover:bg-accent-hover"
-                        : "bg-bg-elevated text-text-muted hover:bg-bg-hover opacity-70"
-                )}
-              >
-                {isPlanning ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-3 w-3 border-2 border-text-muted border-t-transparent rounded-full animate-spin" />
-                    Creating plan...
-                  </span>
-                ) : (
-                  "Plan Mission"
-                )}
-              </button>
-            </div>
-          </header>
-
-          {/* Chat area */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
-              {messages.map((msg) =>
-                msg.role === "activity" ? (
-                  <div key={msg.id} className="flex items-center gap-2 px-2 py-0.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-accent/50 shrink-0" />
-                    <span className="text-xs italic text-text-muted">{msg.content}</span>
-                  </div>
-                ) : (
-                  <div
-                    key={msg.id}
-                    className={cn(
-                      "max-w-[85%] rounded-xl px-4 py-3",
-                      msg.role === "user"
-                        ? "ml-auto bg-accent text-white"
-                        : "bg-bg-surface border border-border text-text-primary"
-                    )}
-                  >
-                    {msg.role === "assistant" && (
-                      <span className="text-xs text-accent font-medium block mb-1">Aria</span>
-                    )}
-                    {msg.role === "assistant" && msg.feed ? (
-                      /* Chronological feed — interleaved text + tool chips */
-                      <div className="space-y-1">
-                        {msg.feed.map((entry) =>
-                          entry.type === "text" ? (
-                            <Markdown key={entry.id} content={entry.content} className="text-sm" />
-                          ) : (
-                            <div key={entry.id} className="flex items-center gap-2 py-0.5 pl-2">
-                              <span className="text-accent text-[10px]">●</span>
-                              <span className="text-xs text-text-muted italic">{entry.content}</span>
-                            </div>
-                          )
-                        )}
-                      </div>
-                    ) : msg.role === "assistant" ? (
-                      <Markdown content={msg.content} className="text-sm" />
-                    ) : (
-                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-                    )}
-                    <span className="text-[10px] text-text-muted mt-1 block opacity-60">
-                      {formatTime(msg.timestamp)}
-                    </span>
-                  </div>
-                )
-              )}
-
-              {/* Live streaming bubble — shown while sending */}
-              {sending && (
-                <div className="max-w-[85%] rounded-xl px-4 py-3 bg-bg-surface border border-border text-text-primary">
-                  <span className="text-xs text-accent font-medium block mb-1">Aria</span>
-
-                  {/* Chronological feed — interleaved text + tool chips */}
-                  {explorationFeed.length > 0 ? (
-                    <div className="space-y-1">
-                      {explorationFeed.map((entry) =>
-                        entry.type === "text" ? (
-                          <Markdown key={entry.id} content={entry.content} className="text-sm" />
-                        ) : (
-                          <div key={entry.id} className="flex items-center gap-2 py-0.5 pl-2">
-                            <span className="text-accent text-[10px]">●</span>
-                            <span className="text-xs text-text-muted italic">{entry.content}</span>
-                          </div>
-                        )
-                      )}
-                      {/* Show dots when last entry is a tool (waiting for next text) */}
-                      {explorationFeed[explorationFeed.length - 1]?.type === "tool" && (
-                        <div className="flex items-center gap-1.5 pl-2 pt-1">
-                          <span className="h-1.5 w-1.5 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                          <span className="h-1.5 w-1.5 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                          <span className="h-1.5 w-1.5 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="h-1.5 w-1.5 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <span className="h-1.5 w-1.5 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Planning indicator (not streaming) */}
-              {isPlanning && !sending && (
-                <div className="max-w-[85%] rounded-xl px-4 py-3 bg-bg-surface border border-border">
-                  <span className="text-xs text-accent font-medium block mb-1">Aria</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="h-1.5 w-1.5 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="h-1.5 w-1.5 bg-text-muted rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                  </div>
-                </div>
-              )}
-
-              <div ref={messagesEndRef} />
-            </div>
-          </div>
-
-          {/* Input */}
-          <div className="border-t border-border p-4 shrink-0">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                sendExplorationMessage();
-              }}
-              className="max-w-3xl mx-auto flex gap-3"
-            >
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                disabled={isPlanning}
-                placeholder={isPlanning ? "Planning in progress..." : "Tell me more about what you're building..."}
-                className="flex-1 rounded-xl bg-bg-surface border border-border px-4 py-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-border-focus disabled:opacity-50"
-              />
-              <button
-                type="submit"
-                disabled={!chatInput.trim() || sending || isPlanning}
-                className="rounded-xl bg-accent px-5 py-3 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Send
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    );
+  async function createIssues() {
+    if (!assessment || selectedFindingIds.size === 0) return;
+    setBusy("issues");
+    setError(null);
+    try {
+      const res = await authFetch(`/api/assessments/${assessment.id}/issues`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ findingIds: Array.from(selectedFindingIds) }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Could not create issues");
+      setAssessment(data.assessment);
+      setEvents(data.assessment.events ?? []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(null);
+    }
   }
 
-  // Idle landing page — sidebar + centered content
+  const currentPhase = assessment?.phase ?? (connection?.connected ? "repo_selected" : "connect_repo");
+
   return (
-    <div className="flex h-screen bg-bg">
-      <Sidebar
-        missions={visibleMissions}
-        activeMissionId={null}
-        collapsed={!sidebarOpen}
-        user={user}
-        onToggle={toggleSidebar}
-        onNewMission={handleNewMission}
-        onSelectMission={handleSelectMission}
-      />
-      <div className="relative flex-1 min-w-0 flex flex-col items-center overflow-hidden">
-        {/* Background glow */}
-        <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-accent/[0.04] rounded-full blur-[120px]" />
+    <div className="min-h-screen bg-[#f6f8fa] text-slate-950">
+      <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-5">
+        <div className="flex items-center gap-3">
+          <NorthwallMark size={25} className="text-teal-600" />
+          <div>
+            <div className="text-sm font-semibold leading-4">Northwall</div>
+            <div className="text-xs text-slate-500">GitHub AppSec orchestration</div>
+          </div>
+        </div>
+        <div className="hidden w-full max-w-lg items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-500 md:flex">
+          <Search className="h-4 w-4" />
+          Search repos, graph nodes, findings, issues
+        </div>
+        <div className="flex items-center gap-3 text-sm">
+          <span className={cn("rounded-full border px-2.5 py-1 font-medium", connection?.connected ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-50 text-slate-600")}>
+            {connection?.connected ? `GitHub: ${connection.account}` : "GitHub not connected"}
+          </span>
+        </div>
+      </header>
 
+      <div className="grid min-h-[calc(100vh-56px)] lg:grid-cols-[320px_1fr]">
+        <aside className="border-r border-slate-200 bg-white">
+          <div className="border-b border-slate-200 p-4">
+            <button
+              onClick={connectGitHub}
+              disabled={busy === "connect"}
+              className="flex w-full items-center justify-center gap-2 rounded-md bg-slate-950 px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+            >
+              {busy === "connect" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Github className="h-4 w-4" />}
+              {connection?.connected ? "Refresh GitHub" : "Connect GitHub"}
+            </button>
+            {connection?.connected && (
+              <button
+                onClick={loadRepos}
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700"
+              >
+                Sync repositories
+              </button>
+            )}
+          </div>
 
-
-        {/* Hero area — centered */}
-        <div className="flex-1 flex flex-col items-center justify-center w-full max-w-3xl px-4 -mt-8">
-          <div className="w-full space-y-10">
-            {/* Headline */}
-            <div className="text-center space-y-3 animate-fade-in-up">
-              <h1 className={cn(headingFont.className, "text-4xl sm:text-5xl text-text-primary tracking-tight")}>
-                What should we build?
-              </h1>
-              <p className="text-base text-text-muted">
-                Describe your idea and a team of AI agents will bring it to life.
-              </p>
+          <div className="border-b border-slate-200 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Repository</h2>
+              <span className="text-xs text-slate-400">{repos.length} repos</span>
             </div>
-
-            {/* Input area */}
-            <div className="animate-fade-in-up-delay-1">
-              <div className={cn(
-                "relative rounded-2xl border bg-bg-surface transition-all duration-200",
-                taskInput.trim()
-                  ? "border-accent/40 shadow-[0_0_24px_rgba(99,102,241,0.08)]"
-                  : "border-border hover:border-border-focus/50"
-              )}>
-                <textarea
-                  value={taskInput}
-                  onChange={(e) => setTaskInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      startExploration();
-                    }
-                  }}
-                  placeholder="Build a SaaS dashboard, analyze market trends, design an API..."
-                  rows={4}
-                  className="w-full rounded-2xl bg-transparent px-5 pt-4 pb-14 text-sm text-text-primary placeholder:text-text-muted/60 focus:outline-none resize-none"
-                />
-                <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
-                  <span className="text-[11px] text-text-muted/50">
-                    {taskInput.trim() ? "Enter to start" : ""}
-                  </span>
-                  <button
-                    onClick={startExploration}
-                    disabled={loading || !taskInput.trim()}
-                    className={cn(
-                      "rounded-xl px-5 py-2 text-sm font-medium transition-all duration-200",
-                      taskInput.trim()
-                        ? "bg-accent text-white hover:bg-accent-hover shadow-[0_2px_12px_rgba(99,102,241,0.3)]"
-                        : "bg-bg-elevated text-text-muted cursor-default"
-                    )}
-                  >
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <span className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Starting...
-                      </span>
-                    ) : (
-                      "Start"
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Example cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-fade-in-up-delay-2">
-              {EXAMPLES.map((ex) => (
+            <div className="max-h-64 space-y-1 overflow-auto">
+              {repos.length === 0 ? (
+                <p className="rounded-md bg-slate-50 p-3 text-sm leading-5 text-slate-500">
+                  Connect GitHub to load repositories.
+                </p>
+              ) : repos.map((repo) => (
                 <button
-                  key={ex.title}
-                  onClick={() => setTaskInput(ex.prompt)}
-                  className="group rounded-xl border border-border bg-bg-surface/50 px-4 py-3.5 text-left hover:bg-bg-hover hover:border-border-focus/30 transition-all duration-200"
+                  key={repo.id}
+                  onClick={() => setSelectedRepoId(repo.id)}
+                  className={cn(
+                    "w-full rounded-md px-3 py-2 text-left text-sm",
+                    selectedRepoId === repo.id ? "bg-blue-50 text-blue-700" : "text-slate-700 hover:bg-slate-50",
+                  )}
                 >
-                  <div className="text-text-muted group-hover:text-accent transition-colors mb-2">
-                    {ex.icon}
-                  </div>
-                  <p className="text-[13px] font-medium text-text-secondary group-hover:text-text-primary transition-colors leading-snug">
-                    {ex.title}
-                  </p>
+                  <span className="block font-medium">{repo.fullName}</span>
+                  <span className="text-xs text-slate-500">{repo.private ? "private" : "public"} · {repo.defaultBranch}</span>
                 </button>
               ))}
             </div>
-          </div>
-        </div>
 
-        {/* Footer */}
-        <footer className="py-6 text-center animate-fade-in-up-delay-3">
-          <p className="text-[11px] text-text-muted/40">
-            Explore &rarr; Plan &rarr; Execute &rarr; Deliver
-          </p>
-        </footer>
+            {selectedRepo && (
+              <div className="mt-4 space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Branch</label>
+                <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2">
+                  <GitBranch className="h-4 w-4 text-slate-400" />
+                  <input
+                    value={branch}
+                    onChange={(event) => setBranch(event.target.value)}
+                    className="w-full bg-transparent text-sm outline-none"
+                  />
+                </div>
+                <button
+                  onClick={createAssessment}
+                  disabled={busy === "create"}
+                  className="flex w-full items-center justify-center gap-2 rounded-md bg-teal-600 px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                >
+                  {busy === "create" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+                  Start assessment
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="p-4">
+            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Setup checklist</h2>
+            <div className="space-y-2">
+              {phases.map((phase) => {
+                const complete = phaseComplete(currentPhase, phase.id);
+                const active = currentPhase === phase.id;
+                return (
+                  <div key={phase.id} className={cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm", active ? "bg-blue-50 text-blue-700" : "text-slate-600")}>
+                    {complete ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <CircleDot className="h-4 w-4 text-slate-300" />}
+                    {phase.label}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </aside>
+
+        <main className="min-w-0 p-5">
+          {error && (
+            <div className="mb-4 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              <AlertCircle className="mt-0.5 h-4 w-4" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="mb-5 flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
+            <div>
+              <div className="mb-2 flex items-center gap-2 text-sm text-slate-500">
+                <Github className="h-4 w-4" />
+                {assessment?.repository.fullName ?? selectedRepo?.fullName ?? "No repository selected"}
+              </div>
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
+                Repository security assessment
+              </h1>
+              <p className="mt-1 text-sm text-slate-600">
+                Static understanding, AppSec planning, live execution, and GitHub issue creation.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <ActionButton label="Understand" busy={busy === "understand"} disabled={!assessment || assessment.phase !== "repo_selected"} onClick={() => runStep("understand")} />
+              <ActionButton label="Generate plan" busy={busy === "plan"} disabled={!assessment || assessment.phase !== "understanding"} onClick={() => runStep("plan")} />
+              <ActionButton label="Approve" busy={busy === "approve"} disabled={!assessment || assessment.phase !== "plan_ready"} onClick={() => runStep("approve")} />
+              <ActionButton label="Run" icon={Play} busy={busy === "run"} disabled={!assessment || assessment.phase !== "approved"} onClick={() => runStep("run")} />
+              <ActionButton label="Create issues" icon={GitPullRequest} busy={busy === "issues"} disabled={!assessment || selectedFindingIds.size === 0 || !["findings_ready", "issues_created"].includes(assessment.phase)} onClick={createIssues} />
+            </div>
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+            <Panel title="Understanding knowledge graph" icon={Network}>
+              <KnowledgeGraphView assessment={assessment} />
+            </Panel>
+            <Panel title="Team and task map" icon={Workflow}>
+              <TaskMap assessment={assessment} />
+            </Panel>
+            <Panel title="Plan for approval" icon={ShieldCheck}>
+              <PlanReview assessment={assessment} />
+            </Panel>
+            <Panel title="Live execution" icon={SquareKanban}>
+              <EventStream events={events} />
+            </Panel>
+          </div>
+
+          <div className="mt-4 grid gap-4 xl:grid-cols-[1fr_420px]">
+            <Panel title="Vulnerabilities and GitHub issues" icon={GitPullRequest}>
+              <FindingsTable
+                findings={assessment?.findings ?? []}
+                selected={selectedFindingIds}
+                setSelected={setSelectedFindingIds}
+                previewFindingId={previewFinding?.id ?? null}
+                onPreview={setPreviewFindingId}
+              />
+            </Panel>
+            <Panel title="Issue preview" icon={GitPullRequest}>
+              <IssuePreview finding={previewFinding} />
+            </Panel>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function ActionButton({
+  label,
+  icon: Icon = Check,
+  busy,
+  disabled,
+  onClick,
+}: {
+  label: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  busy: boolean;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled || busy}
+      className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm disabled:cursor-not-allowed disabled:opacity-45 enabled:hover:bg-slate-50"
+    >
+      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
+      {label}
+    </button>
+  );
+}
+
+function KnowledgeGraphView({ assessment }: { assessment: Assessment | null }) {
+  const graph = assessment?.graph;
+  if (!graph) {
+    return <EmptyState>Select a repo and run understanding to build the knowledge graph.</EmptyState>;
+  }
+
+  return (
+    <div className="p-4">
+      <p className="mb-4 text-sm leading-6 text-slate-600">{graph.summary}</p>
+      <div className="grid gap-3 md:grid-cols-2">
+        {graph.nodes.map((node) => (
+          <div key={node.id} className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{node.kind}</span>
+              <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-semibold", severityStyles[node.risk === "low" ? "low" : node.risk])}>
+                {node.risk}
+              </span>
+            </div>
+            <h3 className="mt-2 text-sm font-semibold text-slate-950">{node.label}</h3>
+            {node.evidence[0] && <p className="mt-1 truncate text-xs text-slate-500">{node.evidence[0]}</p>}
+          </div>
+        ))}
+      </div>
+      {graph.edges.length > 0 && (
+        <div className="mt-4 rounded-md border border-slate-200">
+          {graph.edges.map((edge) => (
+            <div key={edge.id} className="flex items-center gap-2 border-b border-slate-200 px-3 py-2 text-xs font-mono text-slate-600 last:border-0">
+              <span>{edge.source}</span>
+              <ArrowRight className="h-3 w-3" />
+              <span>{edge.target}</span>
+              <span className="text-slate-400">({edge.label})</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TaskMap({ assessment }: { assessment: Assessment | null }) {
+  const plan = assessment?.plan;
+  if (!plan) return <EmptyState>Generate a plan to see the specialist team and task dependencies.</EmptyState>;
+
+  return (
+    <div className="p-4">
+      <div className="space-y-3">
+        {plan.agents.map((agent) => (
+          <div key={agent.id} className="rounded-md border border-slate-200 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-950">{agent.name}</h3>
+                <p className="text-xs text-slate-500">{agent.title}</p>
+              </div>
+              <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">{agent.status}</span>
+            </div>
+            <p className="mt-2 text-sm leading-5 text-slate-600">{agent.focus}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 space-y-2">
+        {plan.tasks.map((task) => (
+          <div key={task.id} className="rounded-md bg-slate-50 px-3 py-2 text-sm">
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-medium text-slate-800">{task.title}</span>
+              <span className="text-xs text-slate-500">{task.status}</span>
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              {task.agentId}{task.dependsOn.length > 0 ? ` · after ${task.dependsOn.join(", ")}` : ""}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PlanReview({ assessment }: { assessment: Assessment | null }) {
+  if (!assessment?.plan) return <EmptyState>The plan appears here after repository understanding finishes.</EmptyState>;
+
+  return (
+    <div className="p-4">
+      <p className="text-sm leading-6 text-slate-700">{assessment.plan.summary}</p>
+      <div className="mt-4 rounded-md border border-slate-200">
+        {assessment.plan.approvalNotes.map((note) => (
+          <div key={note} className="flex items-start gap-2 border-b border-slate-200 px-3 py-2 text-sm text-slate-600 last:border-0">
+            <ShieldCheck className="mt-0.5 h-4 w-4 text-emerald-600" />
+            {note}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function EventStream({ events }: { events: AssessmentEvent[] }) {
+  if (events.length === 0) return <EmptyState>Execution events stream here as the assessment runs.</EmptyState>;
+
+  return (
+    <div className="max-h-[360px] overflow-auto p-4">
+      <div className="space-y-2">
+        {events.slice().reverse().map((event) => (
+          <div key={event.id} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{event.type.replaceAll("_", " ")}</span>
+              <span className="text-xs text-slate-400">{new Date(event.timestamp).toLocaleTimeString()}</span>
+            </div>
+            <p className="mt-1 text-sm text-slate-700">{event.summary}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FindingsTable({
+  findings,
+  selected,
+  setSelected,
+  previewFindingId,
+  onPreview,
+}: {
+  findings: VulnerabilityFinding[];
+  selected: Set<string>;
+  setSelected: (next: Set<string>) => void;
+  previewFindingId: string | null;
+  onPreview: (id: string) => void;
+}) {
+  if (findings.length === 0) {
+    return <EmptyState>Run the approved plan to generate evidence-backed findings and GitHub issue previews.</EmptyState>;
+  }
+
+  function toggle(id: string) {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelected(next);
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[1020px] text-left text-sm">
+        <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <tr>
+            <th className="w-10 px-4 py-3" />
+            <th className="px-4 py-3">Finding</th>
+            <th className="px-4 py-3">Severity</th>
+            <th className="px-4 py-3">Confidence</th>
+            <th className="px-4 py-3">Evidence</th>
+            <th className="px-4 py-3">GitHub issue</th>
+            <th className="px-4 py-3" />
+          </tr>
+        </thead>
+        <tbody>
+          {findings.map((finding) => (
+            <tr
+              key={finding.id}
+              className={cn(
+                "border-b border-slate-200 last:border-0",
+                previewFindingId === finding.id ? "bg-blue-50/60" : "bg-white",
+              )}
+            >
+              <td className="px-4 py-4">
+                <input
+                  type="checkbox"
+                  checked={selected.has(finding.id)}
+                  onChange={() => toggle(finding.id)}
+                />
+              </td>
+              <td className="px-4 py-4">
+                <div className="font-semibold text-slate-950">{finding.title}</div>
+                <div className="mt-1 max-w-xl text-sm leading-5 text-slate-600">{finding.impact}</div>
+              </td>
+              <td className="px-4 py-4">
+                <span className={cn("rounded-full border px-2 py-1 text-xs font-semibold capitalize", severityStyles[finding.severity])}>
+                  {finding.severity}
+                </span>
+              </td>
+              <td className="px-4 py-4 capitalize text-slate-600">{finding.confidence}</td>
+              <td className="px-4 py-4 font-mono text-xs text-slate-600">
+                {finding.evidence.slice(0, 2).map((item) => (
+                  <div key={`${finding.id}-${item.path}-${item.line ?? ""}`}>{item.path}{item.line ? `:${item.line}` : ""}</div>
+                ))}
+              </td>
+              <td className="px-4 py-4">
+                {finding.issueUrl ? (
+                  <a className="font-medium text-blue-600 hover:underline" href={finding.issueUrl} target="_blank" rel="noreferrer">
+                    #{finding.issueNumber}
+                  </a>
+                ) : (
+                  <span className="text-slate-500">Ready</span>
+                )}
+              </td>
+              <td className="px-4 py-4 text-right">
+                <button
+                  onClick={() => onPreview(finding.id)}
+                  className="rounded-md border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Preview
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function IssuePreview({ finding }: { finding: VulnerabilityFinding | null }) {
+  if (!finding) {
+    return <EmptyState>Select a finding to review the GitHub issue before creation.</EmptyState>;
+  }
+
+  return (
+    <div className="p-4">
+      <div className="mb-4 flex flex-wrap gap-2">
+        {["northwall", "security", finding.severity, finding.confidence, ...finding.labels].filter(Boolean).map((label) => (
+          <span key={label} className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600">
+            {label}
+          </span>
+        ))}
+      </div>
+      <h3 className="text-base font-semibold leading-6 text-slate-950">{finding.issueTitle}</h3>
+      <div className="mt-4 rounded-md border border-slate-200 bg-slate-950 p-4 font-mono text-xs leading-6 text-slate-100">
+        <pre className="whitespace-pre-wrap">{finding.issueBody}</pre>
       </div>
     </div>
   );

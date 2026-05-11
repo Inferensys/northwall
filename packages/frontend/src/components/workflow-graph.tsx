@@ -18,7 +18,7 @@ import type {
   MissionAgentState,
   MissionAgentStatus,
   MissionTaskStatus,
-} from "@stallion/shared";
+} from "@northwall/shared";
 
 // ─── Status Colors ───────────────────────────────────────────────────────────
 

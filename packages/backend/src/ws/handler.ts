@@ -1,5 +1,6 @@
 import type { Server as SocketServer } from "socket.io";
 import { createRemoteJWKSet, jwtVerify } from "jose";
+import type { AssessmentManager } from "../services/assessment-manager.js";
 import type { MissionManager } from "../services/mission-manager.js";
 
 let _wsJwks: ReturnType<typeof createRemoteJWKSet> | null = null;
@@ -35,7 +36,8 @@ async function verifyToken(token: string): Promise<string | null> {
  */
 export function setupWebSocket(
   io: SocketServer,
-  missionManager: MissionManager
+  missionManager: MissionManager,
+  assessmentManager?: AssessmentManager,
 ): void {
   // Authenticate socket connections
   io.use(async (socket, next) => {
@@ -64,6 +66,7 @@ export function setupWebSocket(
     console.log(`Client connected: ${socket.id} (user: ${userId})`);
     let unsubscribe: (() => void) | null = null;
     let unsubscribeSDK: (() => void) | null = null;
+    let unsubscribeAssessment: (() => void) | null = null;
 
     // Join a mission room (supports both new and legacy event names)
     const handleJoin = (missionId: string) => {
@@ -140,6 +143,32 @@ export function setupWebSocket(
     socket.on("join_mission", handleJoin);
     socket.on("join_session", handleJoin); // backwards compat
 
+    socket.on("join_assessment", (assessmentId: string) => {
+      if (!assessmentManager) return;
+      const assessmentUserId = assessmentManager.getAssessmentUserId(assessmentId);
+      if (assessmentUserId && assessmentUserId !== userId) {
+        socket.emit("error", { message: "Forbidden" });
+        return;
+      }
+
+      if (unsubscribeAssessment) {
+        unsubscribeAssessment();
+        unsubscribeAssessment = null;
+      }
+
+      socket.join(assessmentId);
+      const assessment = assessmentManager.getAssessment(assessmentId);
+      if (assessment) socket.emit("assessment_state", assessment);
+      const events = assessmentManager.getEvents(assessmentId);
+      if (events.length > 0) socket.emit("assessment_events_batch", events);
+
+      unsubscribeAssessment = assessmentManager.subscribe(assessmentId, (event) => {
+        socket.emit("assessment_event", event);
+        const updated = assessmentManager.getAssessment(assessmentId);
+        if (updated) socket.emit("assessment_state", updated);
+      });
+    });
+
     // Leave mission
     const handleLeave = (missionId: string) => {
       socket.leave(missionId);
@@ -149,6 +178,13 @@ export function setupWebSocket(
 
     socket.on("leave_mission", handleLeave);
     socket.on("leave_session", handleLeave); // backwards compat
+    socket.on("leave_assessment", (assessmentId: string) => {
+      socket.leave(assessmentId);
+      if (unsubscribeAssessment) {
+        unsubscribeAssessment();
+        unsubscribeAssessment = null;
+      }
+    });
 
     // Send message to mission
     socket.on(
@@ -209,6 +245,7 @@ export function setupWebSocket(
       console.log(`Client disconnected: ${socket.id}`);
       if (unsubscribe) unsubscribe();
       if (unsubscribeSDK) unsubscribeSDK();
+      if (unsubscribeAssessment) unsubscribeAssessment();
     });
   });
 }

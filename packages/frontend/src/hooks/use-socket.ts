@@ -5,7 +5,7 @@ import { io, Socket } from "socket.io-client";
 import { useMissionStore } from "@/store/mission-store";
 import { createClient } from "@/lib/supabase/client";
 import { authFetch } from "@/lib/api";
-import type { Mission, ChatMessage, SDKEnvelope } from "@stallion/shared";
+import type { Mission, ChatMessage, SDKEnvelope } from "@northwall/shared";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4000";
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === "true";

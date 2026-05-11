@@ -2,8 +2,12 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(request: NextRequest) {
-  // Dev-mode auth bypass: skip all auth checks
-  if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === "true") {
+  const hasSupabaseConfig =
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
+  // Local/no-auth startup: skip auth checks when bypass is enabled or auth is not configured.
+  if (process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === "true" || !hasSupabaseConfig) {
     return NextResponse.next({ request });
   }
 

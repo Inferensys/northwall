@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import type { ExplorationActivity } from "@stallion/agent-runtime";
+import type { ExplorationActivity } from "@northwall/agent-runtime";
 import type { MissionManager } from "../services/mission-manager.js";
 
 export function missionsRouter(missionManager: MissionManager) {

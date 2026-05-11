@@ -8,7 +8,7 @@ import type {
   ChatMessage,
   MissionAgentState,
   SDKEnvelope,
-} from "@stallion/shared";
+} from "@northwall/shared";
 
 export interface ExplorationFeedEntry {
   id: string;

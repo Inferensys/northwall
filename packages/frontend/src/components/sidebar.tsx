@@ -5,8 +5,8 @@ import { Playfair_Display } from "next/font/google";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { StallionMark } from "./logo";
-import type { Mission } from "@stallion/shared";
+import { NorthwallMark } from "./logo";
+import type { Mission } from "@northwall/shared";
 import type { User } from "@supabase/supabase-js";
 
 const logoFont = Playfair_Display({
@@ -120,7 +120,7 @@ export function Sidebar({
 
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
   const displayName = PORTFOLIO_MODE
-    ? "Stallion"
+    ? "Northwall"
     : (user?.user_metadata?.full_name as string | undefined) ?? user?.email ?? "";
 
   async function handleSignOut() {
@@ -187,9 +187,9 @@ export function Sidebar({
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3.5 shrink-0">
           <div className="flex items-center gap-2.5">
-            <StallionMark size={20} className="text-accent" />
+            <NorthwallMark size={20} className="text-accent" />
             <span className={cn(logoFont.className, "text-[17px] text-text-primary tracking-tight select-none")}>
-              Stallion
+              Northwall
             </span>
           </div>
           <button

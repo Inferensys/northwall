@@ -1,12 +1,12 @@
 import Docker from "dockerode";
 import { nanoid } from "nanoid";
-import type { SandboxConfig, ContainerInfo } from "@stallion/shared";
+import type { SandboxConfig, ContainerInfo } from "@northwall/shared";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { createWriteStream } from "node:fs";
 import { pipeline } from "node:stream/promises";
 
-const CONTAINER_IMAGE = "stallion-agent-control:latest";
+const CONTAINER_IMAGE = "northwall-agent-control:latest";
 const CONTROL_PORT_INTERNAL = 3001;
 const MAX_WAIT_MS = 15_000;
 
@@ -25,8 +25,8 @@ export class ContainerManager {
     const container = await this.docker.createContainer({
       Image: CONTAINER_IMAGE,
       Labels: {
-        "stallion.managed": "true",
-        "stallion.session": config.sessionId,
+        "Northwall.managed": "true",
+        "Northwall.session": config.sessionId,
       },
       Env: [
         `CONTROL_AUTH_TOKEN=${authToken}`,
@@ -102,7 +102,7 @@ export class ContainerManager {
   async sweepOrphans(): Promise<number> {
     const orphans = await this.docker.listContainers({
       all: true,
-      filters: JSON.stringify({ label: ["stallion.managed=true"] }),
+      filters: JSON.stringify({ label: ["Northwall.managed=true"] }),
     });
 
     let count = 0;

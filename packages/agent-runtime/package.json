@@ -1,5 +1,5 @@
 {
-  "name": "@stallion/agent-runtime",
+  "name": "@northwall/agent-runtime",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@stallion/shared": "*",
+    "@northwall/shared": "*",
     "@anthropic-ai/claude-agent-sdk": "^0.2.37",
     "nanoid": "^5.0.9",
     "zod": "^4.0.0"

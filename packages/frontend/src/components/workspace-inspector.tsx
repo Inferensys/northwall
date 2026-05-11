@@ -5,7 +5,7 @@ import { useMissionStore } from "@/store/mission-store";
 import { cn } from "@/lib/utils";
 import { AgentDetailTab } from "./inspector/agent-detail-tab";
 import { WorkspaceTab } from "./inspector/workspace-tab";
-import type { MissionAgentStatus } from "@stallion/shared";
+import type { MissionAgentStatus } from "@northwall/shared";
 
 type TabId = "files" | string;
 

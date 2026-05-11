@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useMissionStore, buildDisplayNameMap } from "@/store/mission-store";
 import { cn } from "@/lib/utils";
-import type { MissionTaskStatus } from "@stallion/shared";
+import type { MissionTaskStatus } from "@northwall/shared";
 
 const WorkflowGraph = dynamic(
   () => import("./workflow-graph").then((m) => ({ default: m.WorkflowGraph })),

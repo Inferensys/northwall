@@ -160,7 +160,7 @@ export function CredentialModal({ request, onSubmit, onDismiss }: CredentialModa
             <Shield className="h-3 w-3 mt-0.5 shrink-0" />
             <span>
               Credentials are sent directly to the agent container via encrypted channel
-              and are not stored by Stallion.
+              and are not stored by Northwall.
             </span>
           </div>
 

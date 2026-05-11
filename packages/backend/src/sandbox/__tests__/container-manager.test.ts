@@ -93,8 +93,8 @@ describe("ContainerManager", () => {
 
       const createArgs = mockCreateContainer.mock.calls[0]?.[0] as Record<string, unknown>;
       const labels = createArgs["Labels"] as Record<string, string>;
-      expect(labels["stallion.managed"]).toBe("true");
-      expect(labels["stallion.session"]).toBe("test-session-abc");
+      expect(labels["Northwall.managed"]).toBe("true");
+      expect(labels["Northwall.session"]).toBe("test-session-abc");
     });
 
     it("sets ANTHROPIC_API_KEY with session-specific placeholder (not static string)", async () => {
@@ -161,13 +161,13 @@ describe("ContainerManager", () => {
   });
 
   describe("sweepOrphans", () => {
-    it("lists containers with stallion.managed=true label", async () => {
+    it("lists containers with Northwall.managed=true label", async () => {
       await manager.sweepOrphans();
 
       expect(mockListContainers).toHaveBeenCalledWith(
         expect.objectContaining({
           all: true,
-          filters: expect.stringContaining("stallion.managed"),
+          filters: expect.stringContaining("Northwall.managed"),
         }),
       );
     });

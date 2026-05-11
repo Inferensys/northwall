@@ -1,4 +1,4 @@
-# stallion-agent-control container image
+# northwall-agent-control container image
 # Headless control server for sandboxed agent sessions.
 # Target image size: ~500MB
 # iptables is included so the backend can apply network isolation rules.
@@ -30,7 +30,7 @@ WORKDIR /app
 COPY package.json ./
 
 # Install runtime deps (tsx for running TypeScript, ws, nanoid, sdk, etc.)
-# Note: @stallion/shared is only needed at type-check time, not at runtime
+# Note: @northwall/shared is only needed at type-check time, not at runtime
 # The control server inlines the minimal Zod validation it needs
 RUN npm install --omit=dev && npm install tsx
 

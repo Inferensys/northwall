@@ -10,7 +10,7 @@ const CONTROL_AUTH_TOKEN = process.env["CONTROL_AUTH_TOKEN"] ?? "";
 const WORKSPACE_DIR = process.env["WORKSPACE_DIR"] ?? "/workspace";
 const CONTROL_PORT = parseInt(process.env["CONTROL_PORT"] ?? "3001", 10);
 
-// Inline validation schema — matches @stallion/shared StartSessionRequest schema
+// Inline validation schema — matches @northwall/shared StartSessionRequest schema
 const StartSessionRequest = z.object({
   prompt: z.string(),
   sessionId: z.string(),

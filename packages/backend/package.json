@@ -1,5 +1,5 @@
 {
-  "name": "@stallion/backend",
+  "name": "@northwall/backend",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,15 +11,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@northwall/agent-runtime": "*",
+    "@northwall/shared": "*",
     "@hono/node-server": "^1.13.0",
-    "@stallion/agent-runtime": "*",
-    "@stallion/shared": "*",
     "dockerode": "^4.0.9",
     "dotenv": "^17.3.1",
     "hono": "^4.6.0",
     "http-proxy": "^1.18.1",
     "jose": "^6.1.3",
     "nanoid": "^5.0.9",
+    "openai": "^6.37.0",
     "socket.io": "^4.8.0",
     "ws": "^8.18.3",
     "zod": "^4.0.0"

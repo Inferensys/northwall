@@ -1,12 +1,7 @@
 import { cn } from "@/lib/utils";
 
-/**
- * The Stallion Mark — an abstract radial spark.
- * Five curved strokes radiating from center, each curving clockwise,
- * creating a dynamic pinwheel that evokes energy, motion, and
- * multiple agents working in parallel.
- */
-export function StallionMark({
+/** The Northwall mark: shield perimeter, system graph, and risk signal. */
+export function NorthwallMark({
   size = 24,
   className,
 }: {
@@ -21,39 +16,28 @@ export function StallionMark({
       fill="none"
       className={className}
     >
-      {/* Five curved rays — each curves clockwise from center */}
       <path
-        d="M16 14.5 C14.5 11, 15 7, 17.5 3.5"
+        d="M16 3.5 25 7v7.3c0 5.8-3.6 10.8-9 14.2-5.4-3.4-9-8.4-9-14.2V7l9-3.5Z"
         stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
+        strokeWidth="2"
+        strokeLinejoin="round"
       />
       <path
-        d="M17.2 15 C19.5 12.5, 23 11.5, 27 12"
+        d="M11 18.5 16 13l5 5.5"
         stroke="currentColor"
-        strokeWidth="2.4"
+        strokeWidth="2"
         strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
-        d="M16.8 17.2 C19 19, 20 22.5, 19 26.5"
+        d="M12 12h8M16 13v8"
         stroke="currentColor"
-        strokeWidth="2.4"
+        strokeWidth="2"
         strokeLinecap="round"
       />
-      <path
-        d="M15 17.5 C13 19.5, 9.5 20.5, 5.5 19.5"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-      <path
-        d="M14.8 15.5 C12 14.5, 9 12, 7.5 8"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-      {/* Center dot */}
-      <circle cx="16" cy="16" r="2" fill="currentColor" />
+      <circle cx="11" cy="18.5" r="1.8" fill="currentColor" />
+      <circle cx="16" cy="13" r="1.8" fill="currentColor" />
+      <circle cx="21" cy="18.5" r="1.8" fill="currentColor" />
     </svg>
   );
 }

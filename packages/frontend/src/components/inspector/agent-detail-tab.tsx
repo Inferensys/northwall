@@ -3,7 +3,7 @@
 import { useMemo, useRef, useEffect } from "react";
 import { useMissionStore } from "@/store/mission-store";
 import { cn, formatTime } from "@/lib/utils";
-import type { MissionAgentStatus, EventType } from "@stallion/shared";
+import type { MissionAgentStatus, EventType } from "@northwall/shared";
 
 const STATUS_DOTS: Record<MissionAgentStatus, string> = {
   idle: "bg-text-muted",

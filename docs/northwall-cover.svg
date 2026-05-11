@@ -1,0 +1,23 @@
+<svg width="1500" height="500" viewBox="0 0 1500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1500" height="500" fill="#050707"/>
+  <path d="M0 0h1500v500H0z" fill="url(#grid)"/>
+  <circle cx="1165" cy="220" r="220" fill="#00E5A8" fill-opacity="0.08"/>
+  <circle cx="1135" cy="250" r="130" fill="#22D3EE" fill-opacity="0.08"/>
+  <g transform="translate(1040 130)">
+    <path d="M110 0l110 42v90c0 72-44 132-110 174C44 264 0 204 0 132V42L110 0z" stroke="#00E5A8" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M54 170l56-64 56 64" stroke="#00E5A8" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M66 94h88M110 106v92" stroke="#22D3EE" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="54" cy="170" r="14" fill="#00E5A8"/>
+    <circle cx="110" cy="106" r="14" fill="#22D3EE"/>
+    <circle cx="166" cy="170" r="14" fill="#00E5A8"/>
+  </g>
+  <text x="110" y="190" fill="#ECFFF8" font-family="Inter, Arial, sans-serif" font-size="86" font-weight="800">Northwall</text>
+  <text x="114" y="252" fill="#00E5A8" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="5">MULTI-AGENT APPSEC ORCHESTRATION</text>
+  <text x="112" y="320" fill="#9EB7B0" font-family="Inter, Arial, sans-serif" font-size="30">Map the system. Plan the assessment. Fix the risk.</text>
+  <text x="114" y="374" fill="#60766F" font-family="Inter, Arial, sans-serif" font-size="20">System graph + expert agents + evidence-backed remediation</text>
+  <defs>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0v32" stroke="#00E5A8" stroke-opacity="0.08"/>
+    </pattern>
+  </defs>
+</svg>

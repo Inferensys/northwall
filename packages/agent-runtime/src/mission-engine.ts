@@ -2,7 +2,7 @@ import { query, type SDKMessage, type Options, type AgentDefinition } from "@ant
 import { nanoid } from "nanoid";
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { MissionPlan, MissionTask, SessionEvent, SDKEnvelope } from "@stallion/shared";
+import type { MissionPlan, MissionTask, SessionEvent, SDKEnvelope } from "@northwall/shared";
 import { type MissionEnvConfig, buildProcessEnv, getWorkspaceRoot } from "./mission-env.js";
 
 // ─── Orchestrator Prompt ─────────────────────────────────────────────────────
@@ -23,9 +23,9 @@ function buildOrchestratorPrompt(plan: MissionPlan): string {
   // Compute parallel groups from dependency graph
   const parallelAnalysis = buildParallelAnalysis(plan.tasks);
 
-  return `You are the Mission Orchestrator for Stallion. You are executing the following mission plan.
+  return `You are the Assessment Orchestrator for Northwall. You are executing the following authorized defensive AppSec plan.
 
-## Mission: ${plan.title}
+## Assessment: ${plan.title}
 **Objective:** ${plan.objective}
 
 ## Available Agents
@@ -42,13 +42,16 @@ ${parallelAnalysis}
 2. **Use the Task tool** to dispatch work to subagents. Set \`subagent_type\` to the agent name (e.g. "${plan.agents[0]?.name ?? "agent-name"}").
 3. **ALWAYS dispatch multiple Task calls in a single response** when multiple tasks have all dependencies met. This runs them in parallel. DO NOT wait for one agent to finish before dispatching the next independent task.
 4. After each batch completes, immediately dispatch newly unblocked tasks.
-5. When ALL tasks are complete, provide a final summary.
+5. When ALL tasks are complete, provide a final summary with findings, evidence, owners, and verification steps.
 
 ## Critical Rules
 - Delegate ALL work to subagents via the Task tool — do not do the work yourself
 - When dispatching, include the task ID in the prompt (e.g. "Complete task t1: ...")
 - If a task has no assignee, choose the best-fit agent
-- NEVER dispatch tasks sequentially when they could run in parallel`;
+- NEVER dispatch tasks sequentially when they could run in parallel
+- Only work on owned or explicitly authorized targets in the plan
+- Do not run destructive tests, target third-party systems, collect credentials, or provide weaponized exploit output
+- Require evidence for every finding and prefer remediation guidance over exploit detail`;
 }
 
 function buildParallelAnalysis(tasks: MissionTask[]): string {
@@ -164,13 +167,13 @@ export class MissionEngine {
       abortController: this.abortController,
     };
 
-    const prompt = `Execute the mission plan now. Analyze the dependency graph and dispatch the first wave of tasks immediately. Remember: dispatch ALL independent tasks in PARALLEL by making multiple Task tool calls in a single response.`;
+    const prompt = `Execute the authorized AppSec assessment plan now. Analyze the dependency graph and dispatch the first wave of tasks immediately. Remember: dispatch ALL independent tasks in PARALLEL by making multiple Task tool calls in a single response. Stay within safe owned-environment boundaries and record evidence for every finding.`;
 
     onLifecycle({
       id: nanoid(),
       sessionId: plan.id,
       type: "session_started",
-      summary: `Mission "${plan.title}" execution started`,
+      summary: `Assessment "${plan.title}" execution started`,
       timestamp: Date.now(),
     });
 
@@ -190,7 +193,7 @@ export class MissionEngine {
         id: nanoid(),
         sessionId: plan.id,
         type: "session_completed",
-        summary: `Mission "${plan.title}" completed successfully`,
+        summary: `Assessment "${plan.title}" completed successfully`,
         timestamp: Date.now(),
       });
     } catch (err) {
@@ -199,7 +202,7 @@ export class MissionEngine {
         id: nanoid(),
         sessionId: plan.id,
         type: "session_error",
-        summary: `Mission failed: ${errorMsg}`,
+        summary: `Assessment failed: ${errorMsg}`,
         data: { error: errorMsg },
         timestamp: Date.now(),
       });

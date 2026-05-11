@@ -1,5 +1,5 @@
 {
-  "name": "@stallion/agent-control",
+  "name": "@northwall/agent-control",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.37",
-    "@stallion/shared": "*",
+    "@northwall/shared": "*",
     "nanoid": "^5.0.9",
     "ws": "^8.18.3",
     "zod": "^4.0.0"

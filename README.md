@@ -1,87 +1,66 @@
-![Stallion cover](docs/stallion-cover.svg)
+# Northwall
 
-A Multi-Agent Orchestration platform that plans the work, assign agents, show the graph, run the job in a VM sandbox (E2B), and let a end-user user see what happened.
+![Northwall cover](docs/northwall-cover.svg)
 
-That is the thing teams usually discover they need after the first impressive prototype.
+Most security tools hand engineers a queue.
 
-If you are building something closer to Devin, Claude Code, GitHub Copilot Workspace, or an internal version of Salesforce Agentforce, this repo is a useful starting point. 
+Northwall starts one step earlier: it connects to a GitHub repo, maps how the app is put together, proposes an AppSec plan, runs safe static checks, and turns approved findings into GitHub issues.
 
-It has:
+That matters when the team is moving fast. A Snyk alert, a Semgrep match, or a GitHub Advanced Security warning is useful. But somebody still has to answer the boring questions: where is this reachable, which owner gets it, what evidence is strong enough, and what should the issue actually say?
 
-- a planner agent that turns a request into description, agents and tasks
-- a graph that shows dependencies instead of hiding them in chat
-- QnA & review step before agents run
-- realtime agent and tool activity
+Northwall makes that workflow visible.
 
-## The Demo
+## Core Flow
 
-The sample task:
+```text
+Sign in with GitHub -> Pick repo and branch -> Understand code -> Review plan -> Run -> Create issues
+```
 
-> Build a product analytics dashboard for a B2B SaaS company. Include acquisition, activation, retention, and revenue metrics, charts, and implementation notes.
+- GitHub OAuth for repo access
+- Repository and branch selection
+- Static repo understanding for packages, routes, auth code, config, CI, and dependency files
+- Knowledge graph showing the app surfaces Northwall found
+- Specialist agent/team task map before execution
+- Approval gate before any run starts
+- Live Socket.IO event stream while tasks execute
+- Evidence-backed findings with severity, confidence, issue title, issue body, and labels
+- GitHub issue creation only after the user selects findings
 
-Short video:
+## Product Screens
 
-[Watch the mission run](docs/stallion-mission-control-run.mp4)
+Key screens:
 
-## What Matters
+![GitHub workflow](docs/screenshots/github-workflow.png)
 
-### The plan is explicit
-
-Before anything runs, Stallion creates agents, task ownership, dependencies, and acceptance criteria.
-
-That matters. A lot of agent products skip this and go straight from prompt to chaos.
-
-![Plan review](docs/screenshots/plan-review.png)
-
-### The graph shows the work
-
-You can see what each agent owns, what is blocked, and what completed.
-
-This is the part a CTO, platform lead, or ops team will care about after the novelty wears off.
-
-![Workflow graph](docs/screenshots/workflow-graph.png)
-
-### The output is inspectable
-
-Agent activity, runtime preview, files, and notes are visible in one place.
-
-No guessing. No “trust me, it ran.”
-
-![Runtime and workspace](docs/screenshots/runtime-workspace.png)
-
-## Why This Exists
-
-Chat is a bad control plane for serious agent work.
-
-It is fine for asking a question. It is weak for assigning work across multiple agents, reviewing a plan, handling credentials, tracking state, or explaining why a job did what it did.
-
-Stallion is a rough but concrete answer to that problem.
-
-Three examples where this pattern fits:
-
-- A fintech team wants agents to review Stripe, Postgres, and customer-support data before drafting a collections workflow.
-- A devtools company wants a GitHub + Linear coding agent that can split work across planner, backend, frontend, and QA agents.
-- A healthcare ops team wants prior-auth packets assembled by agents, but with a human approval step before anything leaves the system.
-
-Different domains. Same shape: plan, agents, graph, sandbox, review.
+![Login on mobile](docs/screenshots/login-mobile.png)
 
 ## How It Works
 
-```text
-Prompt -> Explore -> Plan -> Approve -> Execute -> Inspect
-```
+The backend keeps GitHub and model credentials server-side.
 
-Packages:
+When a user connects GitHub, Northwall stores the provider token through encrypted local persistence keyed by `TOKEN_ENCRYPTION_KEY`. The frontend only sees connection metadata: account, scopes, and connection time.
 
-| Package | What it does |
+When an assessment starts, the backend reads the selected repo through the GitHub API. It inventories files that usually matter in AppSec work:
+
+- package manifests and lockfiles
+- API routes and handlers
+- auth, session, tenant, middleware, and permission files
+- environment/config files
+- GitHub Actions and CI files
+
+OpenAI GPT-5.5 is used on the backend to turn that inventory into a plan and finding drafts. Prompts are defensive by default: owned repos, static/dependency analysis, concrete evidence, no third-party targets, no destructive tests, no exploit payloads.
+
+## Packages
+
+| Package | Role |
 | --- | --- |
-| `@stallion/frontend` | Next.js app, dashboard, graph UI, workspace inspector |
-| `@stallion/backend` | Hono API, Socket.IO events, mission state, sandbox coordination |
-| `@stallion/shared` | Zod schemas for agents, tasks, events, and sandbox state |
-| `@stallion/agent-runtime` | Planner and orchestrator on top of the Claude Agent SDK |
-| `@stallion/agent-control` | Container control server for sandboxed agent runs |
+| `@northwall/frontend` | Next.js app shell, repo picker, graph, plan approval, live run, findings table |
+| `@northwall/backend` | Hono API, GitHub integration, assessment worker, OpenAI planning, Socket.IO events |
+| `@northwall/shared` | Zod schemas for repos, assessments, graphs, plans, findings, and issue payloads |
+| `@northwall/agent-runtime` | Existing orchestration runtime kept for future worker expansion |
+| `@northwall/agent-control` | Existing sandbox control service kept for deeper runtime checks |
 
-Core pieces:
+## Stack
 
 - Next.js 15
 - React 19
@@ -89,32 +68,40 @@ Core pieces:
 - Hono
 - Socket.IO
 - Zod
-- Zustand
-- React Flow
-- Docker
-- Claude Agent SDK
+- Supabase Auth
+- GitHub REST API
+- OpenAI SDK with Azure-compatible `OPENAI_BASE_URL`
 
-## Run It
+## Local Setup
 
-You need Node.js 22+ and Docker.
+Install dependencies:
 
 ```bash
 npm install
 cp .env.example .env
 ```
 
-Add your model credentials to `.env`.
-
-Build the agent container:
+Set backend secrets in `.env`:
 
 ```bash
-docker build -t stallion-agent-control:latest packages/agent-control
+OPENAI_BASE_URL=
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-5.5
+TOKEN_ENCRYPTION_KEY=
+```
+
+For local development without Supabase, use a server-side GitHub token:
+
+```bash
+DEV_AUTH_BYPASS=true
+GITHUB_TOKEN=
+GITHUB_ACCOUNT=
 ```
 
 Start the backend:
 
 ```bash
-DEV_AUTH_BYPASS=true npm run dev:backend
+npm run dev:backend
 ```
 
 Start the frontend:
@@ -131,44 +118,34 @@ Open:
 http://localhost:3000
 ```
 
-## Environment
+## Production Auth
 
-Start with `.env.example`.
+Northwall uses Supabase GitHub OAuth.
 
-The important ones:
+Configure GitHub as the provider in Supabase and request repo access for private repository read plus issue creation.
 
-| Variable | Why it exists |
+Required environment:
+
+| Variable | Purpose |
 | --- | --- |
-| `DEV_AUTH_BYPASS` | local backend user |
-| `NEXT_PUBLIC_DEV_AUTH_BYPASS` | local frontend user |
-| `SUPABASE_URL` | production auth |
-| `NEXT_PUBLIC_SUPABASE_URL` | frontend Supabase URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | frontend Supabase anon key |
-| `ANTHROPIC_FOUNDRY_RESOURCE` | Azure AI Foundry resource |
-| `ANTHROPIC_FOUNDRY_API_KEY` | Azure AI Foundry key |
-| `ANTHROPIC_DEFAULT_SONNET_MODEL` | default agent model |
-| `ANTHROPIC_DEFAULT_OPUS_MODEL` | stronger planning model |
+| `SUPABASE_URL` | Backend JWT issuer/JWKS lookup |
+| `NEXT_PUBLIC_SUPABASE_URL` | Frontend Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Frontend Supabase anon key |
+| `TOKEN_ENCRYPTION_KEY` | Encrypts stored GitHub provider tokens |
+| `OPENAI_BASE_URL` | Azure/OpenAI-compatible endpoint |
+| `OPENAI_API_KEY` | Backend-only model key |
+| `OPENAI_MODEL` | Defaults to `gpt-5.5` |
 
-## If You Build From This
+## Safety Boundaries
 
-The first things to tighten:
+Northwall is for owned repositories and authorized engineering work.
 
-- replace dev auth with SSO or your normal identity provider
-- define which tools each agent can use
-- lock down sandbox networking
-- set run time and spend limits
-- store events and artifacts somewhere durable
-- decide which actions require approval
+It does static and dependency-oriented analysis first. It does not run third-party scanning, destructive tests, credential collection, persistence checks, or weaponized exploit output.
 
-Do those before pointing agents at production data.
+The intended output is plain: evidence, impact, a fix plan, and a GitHub issue the owner can act on.
 
 ## Work With Us
 
-Stallion is a practical starting point for teams building multi-agent products, internal agent platforms, or vertical AI operations tools.
+We build products like this for teams that want agentic workflows without turning their engineering process into theater.
 
-![Stallion cover](docs/inferensys.svg)
-
-
-If that is what you are working on, talk to [Inferensys](https://inferensys.com/).
-
-Contact Us: https://inferensys.com/contact
+Talk to [Inferensys](https://inferensys.com/) or contact us at [inferensys.com/contact](https://inferensys.com/contact).

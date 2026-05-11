@@ -1,5 +1,5 @@
 {
-  "name": "@stallion/frontend",
+  "name": "@northwall/frontend",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@stallion/shared": "*",
+    "@northwall/shared": "*",
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.98.0",
     "@xyflow/react": "^12.0.0",

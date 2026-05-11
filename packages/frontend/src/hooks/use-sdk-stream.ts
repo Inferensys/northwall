@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useMissionStore } from "@/store/mission-store";
-import type { SDKEnvelope, MissionPlan, MissionAgentStatus, MissionTaskStatus } from "@stallion/shared";
+import type { SDKEnvelope, MissionPlan, MissionAgentStatus, MissionTaskStatus } from "@northwall/shared";
 
 // ─── Feed Entry Types ─────────────────────────────────────────────────────────
 
@@ -331,7 +331,7 @@ function processResult(
     state.feed.push({
       kind: "result",
       status: "success",
-      summary: msg.result?.slice(0, 200) ?? "Mission completed",
+      summary: msg.result?.slice(0, 200) ?? "Assessment completed",
       costUsd: msg.total_cost_usd,
       durationMs: msg.duration_ms,
       turns: msg.num_turns,

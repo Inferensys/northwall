@@ -9,14 +9,14 @@ export interface MissionEnvConfig {
   defaultModel?: string; // "claude-sonnet-4-6"
   capableModel?: string; // "claude-opus-4-6"
   // Workspace
-  workspaceRoot?: string; // default: os.tmpdir()/stallion-missions/
+  workspaceRoot?: string; // default: os.tmpdir()/northwall-engagements/
   // Azure Image Generation
   imageGenEndpoint?: string;
   imageGenApiKey?: string;
 }
 
 export function getWorkspaceRoot(config: MissionEnvConfig): string {
-  return config.workspaceRoot ?? path.join(os.tmpdir(), "stallion-missions");
+  return config.workspaceRoot ?? path.join(os.tmpdir(), "northwall-engagements");
 }
 
 export function buildSdkEnv(config: MissionEnvConfig): Record<string, string> {

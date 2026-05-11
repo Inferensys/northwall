@@ -3,31 +3,29 @@
 import Link from "next/link";
 import {
   Activity,
-  ArrowRight,
-  BarChart3,
-  Boxes,
-  Check,
+  BellRing,
+  CheckCircle2,
   CreditCard,
-  DatabaseZap,
+  Database,
   FileClock,
+  Fingerprint,
   GitBranch,
   KeyRound,
   Lock,
-  Mail,
   PlugZap,
   ReceiptText,
-  Search,
   ShieldCheck,
-  Sparkles,
+  TriangleAlert,
   Users,
   WalletCards,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { StallionMark } from "@/components/logo";
+import { NorthwallMark } from "@/components/logo";
 import { cn } from "@/lib/utils";
+import { evidenceTimeline, findings, systemGraph } from "@/lib/northwall-demo";
 
 const nav = [
-  { href: "/", label: "Mission Control" },
+  { href: "/", label: "Assessment" },
   { href: "/admin", label: "Admin" },
   { href: "/team", label: "Team" },
   { href: "/integrations", label: "Integrations" },
@@ -44,11 +42,13 @@ export function PortfolioShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-bg text-text-primary">
-      <aside className="fixed inset-y-0 left-0 w-[260px] border-r border-white/[0.06] bg-[#0e0e16]">
+    <div className="min-h-screen bg-bg bg-grid text-text-primary">
+      <aside className="fixed inset-y-0 left-0 w-[260px] border-r border-white/10 bg-[#17262c]">
         <div className="flex items-center gap-2.5 px-5 py-5">
-          <StallionMark size={22} className="text-accent" />
-          <span className="text-lg font-semibold tracking-tight">Stallion</span>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/8 text-teal-300">
+            <NorthwallMark size={22} />
+          </div>
+          <span className="font-display text-lg font-semibold tracking-tight text-white">Northwall</span>
         </div>
         <nav className="px-3">
           {nav.map((item) => (
@@ -58,18 +58,18 @@ export function PortfolioShell({
               className={cn(
                 "block rounded-lg px-3 py-2.5 text-sm transition-colors",
                 active === item.label
-                  ? "bg-white/[0.08] text-text-primary"
-                  : "text-text-secondary hover:bg-white/[0.05] hover:text-text-primary",
+                  ? "border border-white/10 bg-teal-500/15 text-white"
+                  : "text-slate-400 hover:bg-white/[0.05] hover:text-white",
               )}
             >
               {item.label}
             </Link>
           ))}
         </nav>
-        <div className="absolute bottom-0 left-0 right-0 border-t border-white/[0.06] p-4">
-          <div className="rounded-lg bg-bg-elevated p-3">
-            <p className="text-xs font-medium text-text-primary">Enterprise workspace</p>
-            <p className="mt-1 text-[11px] text-text-muted">SAML, audit logs, and spend controls enabled</p>
+        <div className="absolute bottom-0 left-0 right-0 border-t border-accent/10 p-4">
+          <div className="rounded-lg border border-accent/15 bg-bg-surface p-3">
+            <p className="text-xs font-medium text-text-primary">Security workspace</p>
+            <p className="mt-1 text-[11px] text-text-muted">SSO, audit logs, scope gates, and approval rules enabled</p>
           </div>
         </div>
       </aside>
@@ -88,14 +88,14 @@ export function PageHeader({
   action?: string;
 }) {
   return (
-    <header className="border-b border-border px-8 py-5">
+    <header className="border-b border-accent/10 bg-bg/80 px-8 py-5 backdrop-blur">
       <div className="flex items-center justify-between gap-6">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-text-primary">{title}</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-text-primary">{title}</h1>
           <p className="mt-1 text-sm text-text-muted">{description}</p>
         </div>
         {action && (
-          <button className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-[0_0_20px_rgba(99,102,241,0.28)]">
+          <button className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm">
             {action}
           </button>
         )}
@@ -113,63 +113,61 @@ export function StatCard({
   label: string;
   value: string;
   trend: string;
-  icon: typeof Activity;
+  icon: LucideIcon;
 }) {
   return (
     <div className="rounded-lg border border-border bg-bg-surface p-4">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-medium uppercase tracking-wider text-text-muted">{label}</p>
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-text-muted">{label}</p>
         <Icon className="h-4 w-4 text-accent" />
       </div>
-      <p className="mt-4 text-2xl font-semibold text-text-primary">{value}</p>
-      <p className="mt-1 text-xs text-success">{trend}</p>
+      <p className="mt-4 font-display text-3xl font-semibold text-text-primary">{value}</p>
+      <p className="mt-1 text-xs text-accent">{trend}</p>
     </div>
   );
 }
 
 export function AdminScreen() {
-  const missions = [
-    ["Product analytics dashboard", "Completed", "4 agents", "$0.18", "2m ago"],
-    ["Enterprise onboarding flow", "Running", "6 agents", "$0.42", "8m ago"],
-    ["API documentation refresh", "Review", "3 agents", "$0.11", "21m ago"],
-    ["Pricing experiment setup", "Completed", "5 agents", "$0.29", "1h ago"],
+  const rows = [
+    ["AcmePay AppSec assessment", "Running", "7 agents", "4 findings", "2m ago"],
+    ["Customer Portal tenant review", "Review", "5 agents", "3 findings", "18m ago"],
+    ["Payments webhook check", "Remediating", "4 agents", "2 findings", "41m ago"],
+    ["CI dependency sweep", "Verified", "3 agents", "1 finding", "2h ago"],
   ];
 
   return (
     <PortfolioShell active="Admin">
       <PageHeader
         title="Admin Console"
-        description="Monitor workspaces, missions, agent usage, and operational health."
-        action="Invite Member"
+        description="Workspace-level view of assessments, agents, risk, policy gates, and remediation health."
+        action="Invite Analyst"
       />
       <div className="space-y-6 p-8">
         <div className="grid grid-cols-4 gap-4">
-          <StatCard label="Active missions" value="18" trend="+24% this week" icon={Activity} />
-          <StatCard label="Agents spawned" value="142" trend="+38% this month" icon={Boxes} />
-          <StatCard label="Workspace spend" value="$1,248" trend="42% below budget" icon={BarChart3} />
-          <StatCard label="Team members" value="32" trend="6 invited" icon={Users} />
+          <StatCard label="Active assessments" value="12" trend="+4 this week" icon={Activity} />
+          <StatCard label="Findings open" value="38" trend="11 high confidence" icon={TriangleAlert} />
+          <StatCard label="Graph nodes" value="1,284" trend="Across 9 apps" icon={GitBranch} />
+          <StatCard label="Verified fixes" value="76%" trend="+18% this month" icon={CheckCircle2} />
         </div>
 
         <div className="grid grid-cols-12 gap-4">
           <section className="col-span-8 rounded-lg border border-border bg-bg-surface">
             <div className="border-b border-border px-5 py-4">
-              <h2 className="text-sm font-semibold">Mission Operations</h2>
+              <h2 className="font-display text-base font-semibold">Assessment Operations</h2>
             </div>
             <table className="w-full text-left text-sm">
-              <thead className="text-xs uppercase tracking-wider text-text-muted">
+              <thead className="text-xs uppercase tracking-[0.16em] text-text-muted">
                 <tr className="border-b border-border">
-                  <th className="px-5 py-3 font-medium">Mission</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                  <th className="px-5 py-3 font-medium">Agents</th>
-                  <th className="px-5 py-3 font-medium">Cost</th>
-                  <th className="px-5 py-3 font-medium">Updated</th>
+                  {["Assessment", "Status", "Team", "Risk", "Updated"].map((head) => (
+                    <th key={head} className="px-5 py-3 font-medium">{head}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {missions.map((row) => (
+                {rows.map((row) => (
                   <tr key={row[0]} className="border-b border-border/60 last:border-0">
                     {row.map((cell, index) => (
-                      <td key={cell} className={cn("px-5 py-3", index === 1 ? "text-success" : "text-text-secondary")}>
+                      <td key={cell} className={cn("px-5 py-3", index === 1 ? "text-accent" : "text-text-secondary")}>
                         {cell}
                       </td>
                     ))}
@@ -179,11 +177,11 @@ export function AdminScreen() {
             </table>
           </section>
           <section className="col-span-4 rounded-lg border border-border bg-bg-surface p-5">
-            <h2 className="text-sm font-semibold">Policy Guardrails</h2>
+            <h2 className="font-display text-base font-semibold">Policy Guardrails</h2>
             <div className="mt-4 space-y-3">
-              {["Budget cap enforcement", "Credential proxy", "Network isolation", "Audit event retention"].map((item) => (
+              {["Owned scope required", "Rate limits enforced", "Destructive checks disabled", "Owner approval before execution"].map((item) => (
                 <div key={item} className="flex items-center gap-3 rounded-lg bg-bg-elevated px-3 py-2">
-                  <Check className="h-4 w-4 text-success" />
+                  <ShieldCheck className="h-4 w-4 text-accent" />
                   <span className="text-sm text-text-secondary">{item}</span>
                 </div>
               ))}
@@ -197,73 +195,46 @@ export function AdminScreen() {
 
 export function BillingScreen() {
   const invoices = [
-    ["INV-2026-05", "May usage", "$1,248.00", "Paid"],
-    ["INV-2026-04", "April usage", "$982.50", "Paid"],
-    ["INV-2026-03", "March usage", "$756.80", "Paid"],
+    ["INV-2026-05", "May assessments", "$1,820.00", "Paid"],
+    ["INV-2026-04", "April assessments", "$1,395.50", "Paid"],
+    ["INV-2026-03", "March assessments", "$1,104.80", "Paid"],
   ];
 
   return (
     <PortfolioShell active="Billing">
-      <PageHeader
-        title="Billing & Payments"
-        description="Usage-based billing, payment methods, invoices, and budget controls."
-        action="Update Plan"
-      />
+      <PageHeader title="Billing & Usage" description="Assessment minutes, agent runs, evidence retention, invoices, and budget controls." action="Update Plan" />
       <div className="grid grid-cols-12 gap-4 p-8">
         <section className="col-span-5 rounded-lg border border-border bg-bg-surface p-5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-xs uppercase tracking-wider text-text-muted">Current plan</p>
-              <h2 className="mt-2 text-2xl font-semibold">Scale</h2>
-              <p className="mt-1 text-sm text-text-muted">For teams running agentic workflows daily.</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-text-muted">Current plan</p>
+              <h2 className="mt-2 font-display text-3xl font-semibold">Security Ops</h2>
+              <p className="mt-1 text-sm text-text-muted">For teams running AppSec agent assessments every week.</p>
             </div>
-            <Sparkles className="h-5 w-5 text-accent" />
+            <WalletCards className="h-5 w-5 text-accent" />
           </div>
-          <div className="mt-6 rounded-lg bg-bg-elevated p-4">
-            <div className="flex items-end gap-2">
-              <span className="text-3xl font-semibold">$499</span>
-              <span className="pb-1 text-sm text-text-muted">base / month</span>
-            </div>
-            <div className="mt-4 h-2 rounded-full bg-bg">
-              <div className="h-full w-[62%] rounded-full bg-accent" />
-            </div>
-            <p className="mt-2 text-xs text-text-muted">$1,248 of $2,000 monthly budget used</p>
+          <div className="mt-8 rounded-lg bg-bg-elevated p-4">
+            <span className="font-display text-4xl font-semibold">$899</span>
+            <span className="text-text-muted"> / month</span>
           </div>
         </section>
-
         <section className="col-span-7 rounded-lg border border-border bg-bg-surface p-5">
-          <h2 className="text-sm font-semibold">Payment Method</h2>
-          <div className="mt-4 flex items-center justify-between rounded-lg border border-border bg-bg-elevated p-4">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-accent/15 p-2 text-accent">
-                <CreditCard className="h-5 w-5" />
+          <h2 className="font-display text-base font-semibold">Invoices</h2>
+          <div className="mt-4 space-y-2">
+            {invoices.map((invoice) => (
+              <div key={invoice[0]} className="grid grid-cols-4 items-center rounded-lg bg-bg-elevated px-4 py-3 text-sm">
+                <span className="font-mono text-text-secondary">{invoice[0]}</span>
+                <span>{invoice[1]}</span>
+                <span>{invoice[2]}</span>
+                <span className="text-accent">{invoice[3]}</span>
               </div>
-              <div>
-                <p className="text-sm font-medium">Visa ending in 4242</p>
-                <p className="text-xs text-text-muted">Expires 09/29, billed to finance@company.com</p>
-              </div>
-            </div>
-            <button className="rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary">Change</button>
-          </div>
-          <div className="mt-4 grid grid-cols-3 gap-3">
-            <StatCard label="This month" value="$1,248" trend="Projected $1,620" icon={WalletCards} />
-            <StatCard label="Avg mission" value="$0.31" trend="-12% vs last month" icon={ReceiptText} />
-            <StatCard label="Budget left" value="$752" trend="Healthy" icon={ShieldCheck} />
+            ))}
           </div>
         </section>
-
-        <section className="col-span-12 rounded-lg border border-border bg-bg-surface">
-          <div className="border-b border-border px-5 py-4">
-            <h2 className="text-sm font-semibold">Invoices</h2>
-          </div>
-          {invoices.map((invoice) => (
-            <div key={invoice[0]} className="grid grid-cols-4 items-center border-b border-border px-5 py-3 text-sm last:border-0">
-              <span className="font-mono text-text-secondary">{invoice[0]}</span>
-              <span className="text-text-secondary">{invoice[1]}</span>
-              <span className="text-text-primary">{invoice[2]}</span>
-              <span className="text-success">{invoice[3]}</span>
-            </div>
-          ))}
+        <section className="col-span-12 grid grid-cols-3 gap-4">
+          <StatCard label="Agent minutes" value="1,940" trend="62% of budget" icon={Activity} />
+          <StatCard label="Evidence retention" value="365d" trend="Encrypted archive" icon={FileClock} />
+          <StatCard label="Payment method" value="4242" trend="Visa on file" icon={CreditCard} />
         </section>
       </div>
     </PortfolioShell>
@@ -272,59 +243,37 @@ export function BillingScreen() {
 
 export function TeamScreen() {
   const members = [
-    ["Priya Shah", "Owner", "Product Engineering", "Active"],
-    ["Marcus Lee", "Admin", "Platform", "Active"],
-    ["Elena Torres", "Member", "Design Systems", "Active"],
-    ["Noah Kim", "Member", "Data", "Pending"],
+    ["Priya Shah", "Security Lead", "Approver", "Active"],
+    ["Mateo Ruiz", "Backend Owner", "Remediation", "Active"],
+    ["Sarah Chen", "Platform", "Scope Admin", "Active"],
+    ["Jordan Lee", "Compliance", "Read-only", "Invited"],
   ];
 
   return (
     <PortfolioShell active="Team">
-      <PageHeader
-        title="Team Management"
-        description="Workspace roles, groups, approvals, and access policies."
-        action="Add Member"
-      />
+      <PageHeader title="Team & Access" description="Assign owners, reviewers, and scope approvers for each assessment." action="Add Member" />
       <div className="grid grid-cols-12 gap-4 p-8">
         <section className="col-span-8 rounded-lg border border-border bg-bg-surface">
-          <div className="flex items-center justify-between border-b border-border px-5 py-4">
-            <h2 className="text-sm font-semibold">Members</h2>
-            <div className="flex items-center gap-2 rounded-lg border border-border bg-bg-elevated px-3 py-2 text-xs text-text-muted">
-              <Search className="h-3.5 w-3.5" />
-              Search workspace
-            </div>
+          <div className="border-b border-border px-5 py-4">
+            <h2 className="font-display text-base font-semibold">Members</h2>
           </div>
           <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase tracking-wider text-text-muted">
-              <tr className="border-b border-border">
-                <th className="px-5 py-3 font-medium">Name</th>
-                <th className="px-5 py-3 font-medium">Role</th>
-                <th className="px-5 py-3 font-medium">Group</th>
-                <th className="px-5 py-3 font-medium">Status</th>
-              </tr>
-            </thead>
             <tbody>
               {members.map((member) => (
                 <tr key={member[0]} className="border-b border-border/60 last:border-0">
-                  <td className="px-5 py-3 text-text-primary">{member[0]}</td>
-                  <td className="px-5 py-3 text-text-secondary">{member[1]}</td>
-                  <td className="px-5 py-3 text-text-secondary">{member[2]}</td>
-                  <td className="px-5 py-3 text-success">{member[3]}</td>
+                  {member.map((cell, index) => (
+                    <td key={cell} className={cn("px-5 py-3", index === 0 ? "text-text-primary" : "text-text-secondary")}>{cell}</td>
+                  ))}
                 </tr>
               ))}
             </tbody>
           </table>
         </section>
         <section className="col-span-4 rounded-lg border border-border bg-bg-surface p-5">
-          <h2 className="text-sm font-semibold">Approval Rules</h2>
+          <h2 className="font-display text-base font-semibold">Approval Rules</h2>
           <div className="mt-4 space-y-3">
-            {["Production deploys require admin approval", "High-spend missions route to finance", "External integrations require owner review"].map((rule) => (
-              <div key={rule} className="rounded-lg bg-bg-elevated p-3">
-                <div className="flex items-start gap-3">
-                  <ShieldCheck className="mt-0.5 h-4 w-4 text-accent" />
-                  <p className="text-sm leading-5 text-text-secondary">{rule}</p>
-                </div>
-              </div>
+            {["High severity findings require security lead review", "External URL scopes require admin approval", "Fix verification must include test evidence"].map((item) => (
+              <p key={item} className="rounded-lg bg-bg-elevated p-3 text-sm text-text-secondary">{item}</p>
             ))}
           </div>
         </section>
@@ -334,92 +283,61 @@ export function TeamScreen() {
 }
 
 export function IntegrationsScreen() {
-  const integrations = [
-    ["GitHub", "Repository access and pull request automation", "Connected", GitBranch],
-    ["Postgres", "Read-only analytics warehouse connection", "Connected", DatabaseZap],
-    ["Slack", "Mission approvals and delivery notifications", "Connected", PlugZap],
-    ["Linear", "Ticket creation from completed mission tasks", "Ready", FileClock],
-  ] satisfies Array<[string, string, string, LucideIcon]>;
+  const integrations: Array<[string, string, LucideIcon]> = [
+    ["GitHub", "Repo import, code search, pull request handoff", GitBranch],
+    ["Snyk", "Dependency advisory enrichment", ShieldCheck],
+    ["Semgrep", "Static rule packs and custom checks", Fingerprint],
+    ["Jira", "Remediation tickets and owner sync", PlugZap],
+    ["Postgres", "Schema graph and migration review", Database],
+    ["Stripe", "Webhook and billing flow context", ReceiptText],
+  ];
 
   return (
     <PortfolioShell active="Integrations">
-      <PageHeader
-        title="Integrations"
-        description="Connect source control, data systems, ticketing, and approval channels."
-        action="Add Integration"
-      />
-      <div className="grid grid-cols-12 gap-4 p-8">
-        <section className="col-span-7 space-y-3">
-          {integrations.map(([name, body, status, Icon]) => (
-            <div key={name} className="flex items-center justify-between rounded-lg border border-border bg-bg-surface p-4">
-              <div className="flex items-center gap-4">
-                <div className="rounded-lg bg-accent/15 p-2 text-accent">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">{name}</p>
-                  <p className="mt-1 text-xs text-text-muted">{body}</p>
-                </div>
-              </div>
-              <span className="rounded-full bg-success/10 px-2 py-1 text-xs text-success">{status}</span>
-            </div>
-          ))}
-        </section>
-        <section className="col-span-5 rounded-lg border border-border bg-bg-surface p-5">
-          <h2 className="text-sm font-semibold">Credential Routing</h2>
-          <p className="mt-2 text-sm leading-6 text-text-secondary">
-            Secrets stay in the workspace vault and are brokered into mission sandboxes only when the policy engine approves scope, duration, and destination.
-          </p>
-          <div className="mt-6 space-y-3">
-            {["Scoped tokens", "One-time credentials", "Egress review", "Usage audit"].map((item) => (
-              <div key={item} className="flex items-center justify-between border-b border-border pb-3 last:border-0">
-                <span className="text-sm text-text-muted">{item}</span>
-                <Check className="h-4 w-4 text-success" />
-              </div>
-            ))}
-          </div>
-        </section>
+      <PageHeader title="Integrations" description="Connect source, scanners, ticketing, evidence stores, and ownership systems." action="Connect Source" />
+      <div className="grid grid-cols-3 gap-4 p-8">
+        {integrations.map(([name, description, Icon]) => {
+          const IntegrationIcon = Icon as LucideIcon;
+          return (
+            <section key={name as string} className="rounded-lg border border-border bg-bg-surface p-5">
+              <IntegrationIcon className="h-5 w-5 text-accent" />
+              <h2 className="mt-4 font-display text-lg font-semibold">{name}</h2>
+              <p className="mt-2 text-sm leading-6 text-text-secondary">{description}</p>
+              <button className="mt-5 rounded-lg border border-accent/20 px-3 py-2 text-sm text-accent">Configure</button>
+            </section>
+          );
+        })}
       </div>
     </PortfolioShell>
   );
 }
 
 export function AuditScreen() {
-  const events = [
-    ["13:42", "Mission approved", "Priya Shah", "Product analytics dashboard"],
-    ["13:41", "Credential scoped", "Policy engine", "GitHub read access"],
-    ["13:39", "Agent spawned", "Mission planner", "Frontend engineer"],
-    ["13:37", "Workspace export", "Marcus Lee", "Case study bundle"],
-    ["13:33", "Budget rule evaluated", "Policy engine", "$5 mission cap"],
-  ];
-
   return (
     <PortfolioShell active="Audit">
-      <PageHeader
-        title="Audit & Compliance"
-        description="Trace user actions, policy decisions, credentials, and mission lifecycle events."
-        action="Export Log"
-      />
+      <PageHeader title="Audit Trail" description="Every scope decision, agent action, evidence attachment, and remediation state change." action="Export Evidence" />
       <div className="grid grid-cols-12 gap-4 p-8">
-        <section className="col-span-8 rounded-lg border border-border bg-bg-surface">
-          <div className="border-b border-border px-5 py-4">
-            <h2 className="text-sm font-semibold">Event Stream</h2>
+        <section className="col-span-8 rounded-lg border border-border bg-bg-surface p-5">
+          <h2 className="font-display text-base font-semibold">Event Stream</h2>
+          <div className="mt-4 space-y-3">
+            {evidenceTimeline.map((event) => (
+              <div key={`${event[0]}-${event[1]}`} className="grid grid-cols-[70px_150px_1fr] rounded-lg bg-bg-elevated px-4 py-3 text-sm">
+                <span className="font-mono text-text-muted">{event[0]}</span>
+                <span className="text-accent">{event[1]}</span>
+                <span className="text-text-secondary">{event[2]}</span>
+              </div>
+            ))}
           </div>
-          {events.map((event) => (
-            <div key={`${event[0]}-${event[1]}`} className="grid grid-cols-[80px_1.2fr_1fr_1.4fr] border-b border-border px-5 py-3 text-sm last:border-0">
-              <span className="font-mono text-text-muted">{event[0]}</span>
-              <span className="text-text-primary">{event[1]}</span>
-              <span className="text-text-secondary">{event[2]}</span>
-              <span className="text-text-secondary">{event[3]}</span>
-            </div>
-          ))}
         </section>
         <section className="col-span-4 rounded-lg border border-border bg-bg-surface p-5">
-          <h2 className="text-sm font-semibold">Compliance Posture</h2>
-          <div className="mt-5 space-y-4">
-            <StatCard label="Events retained" value="90d" trend="Policy aligned" icon={FileClock} />
-            <StatCard label="Exports signed" value="100%" trend="Checksum verified" icon={ShieldCheck} />
-            <StatCard label="Access reviews" value="12" trend="Current quarter" icon={Users} />
+          <h2 className="font-display text-base font-semibold">Compliance Posture</h2>
+          <div className="mt-4 space-y-3">
+            {["ASVS mapped findings", "CWE attached where relevant", "KEV enrichment enabled", "Reviewer approval retained"].map((item) => (
+              <div key={item} className="flex items-center gap-3 rounded-lg bg-bg-elevated px-3 py-2">
+                <CheckCircle2 className="h-4 w-4 text-accent" />
+                <span className="text-sm text-text-secondary">{item}</span>
+              </div>
+            ))}
           </div>
         </section>
       </div>
@@ -430,49 +348,36 @@ export function AuditScreen() {
 export function SettingsScreen() {
   return (
     <PortfolioShell active="Settings">
-      <PageHeader
-        title="Workspace Settings"
-        description="Identity, access controls, environment policies, and deployment defaults."
-        action="Save Changes"
-      />
+      <PageHeader title="Settings" description="Authentication, scope policy, runtime defaults, and evidence retention." action="Save Changes" />
       <div className="grid grid-cols-12 gap-4 p-8">
-        <section className="col-span-7 rounded-lg border border-border bg-bg-surface p-5">
-          <h2 className="text-sm font-semibold">Authentication</h2>
+        <section className="col-span-6 rounded-lg border border-border bg-bg-surface p-5">
+          <h2 className="font-display text-base font-semibold">Authentication</h2>
           <div className="mt-4 space-y-3">
             {([
-              ["SAML SSO", "Required for all company users", ShieldCheck],
-              ["Domain lock", "Only @company.com accounts can join", Mail],
-              ["Session duration", "12 hours with admin override", Lock],
-              ["API key vault", "Keys are proxied and never exposed to agents", KeyRound],
-            ] satisfies Array<[string, string, LucideIcon]>).map(([title, body, Icon]) => (
-              <div key={title} className="flex items-center justify-between rounded-lg bg-bg-elevated p-4">
-                <div className="flex items-center gap-3">
-                  <Icon className="h-5 w-5 text-accent" />
+              ["SAML SSO", "Required for all workspace members", Lock],
+              ["MFA", "Required for approvers and admins", KeyRound],
+              ["Session timeout", "12 hours", BellRing],
+            ] as Array<[string, string, LucideIcon]>).map(([title, description, Icon]) => {
+              const SettingIcon = Icon as LucideIcon;
+              return (
+                <div key={title as string} className="flex items-center gap-3 rounded-lg bg-bg-elevated p-3">
+                  <SettingIcon className="h-4 w-4 text-accent" />
                   <div>
                     <p className="text-sm font-medium">{title}</p>
-                    <p className="text-xs text-text-muted">{body}</p>
+                    <p className="text-xs text-text-muted">{description}</p>
                   </div>
                 </div>
-                <span className="rounded-full bg-success/10 px-2 py-1 text-xs text-success">Enabled</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
-        <section className="col-span-5 rounded-lg border border-border bg-bg-surface p-5">
-          <h2 className="text-sm font-semibold">Runtime Defaults</h2>
-          <div className="mt-5 space-y-4">
-            {[
-              ["Default model", "Claude Sonnet"],
-              ["Sandbox memory", "4 GB"],
-              ["Max wall clock", "30 minutes"],
-              ["Network policy", "Restricted egress"],
-              ["Spend limit", "$5 per mission"],
-            ].map(([label, value]) => (
-              <div key={label} className="flex items-center justify-between border-b border-border pb-3 last:border-0">
-                <span className="text-sm text-text-muted">{label}</span>
-                <span className="text-sm text-text-primary">{value}</span>
-              </div>
-            ))}
+        <section className="col-span-6 rounded-lg border border-border bg-bg-surface p-5">
+          <h2 className="font-display text-base font-semibold">Runtime Defaults</h2>
+          <div className="mt-4 space-y-3 text-sm text-text-secondary">
+            <p>Safe AppSec mode is the default for new assessments.</p>
+            <p>Request rate is capped at 30 rpm unless an admin lowers it.</p>
+            <p>Evidence retention is 365 days for paid workspaces.</p>
+            <p>External host assessments require explicit scope approval.</p>
           </div>
         </section>
       </div>
@@ -482,50 +387,33 @@ export function SettingsScreen() {
 
 export function LoginScreen() {
   return (
-    <div className="grid min-h-screen grid-cols-[1.05fr_0.95fr] bg-bg text-text-primary">
-      <section className="flex flex-col justify-between border-r border-border p-10">
-        <div className="flex items-center gap-2.5">
-          <StallionMark size={24} className="text-accent" />
-          <span className="text-lg font-semibold">Stallion</span>
+    <div className="grid min-h-screen grid-cols-1 bg-bg bg-grid text-text-primary lg:grid-cols-2">
+      <section className="flex min-h-[48vh] flex-col justify-between border-b border-accent/10 p-6 lg:min-h-screen lg:border-b-0 lg:border-r lg:p-10">
+        <div className="flex items-center gap-3">
+          <NorthwallMark size={28} className="text-accent" />
+          <span className="font-display text-xl font-semibold">Northwall</span>
         </div>
-        <div className="max-w-xl">
-          <h1 className="text-5xl font-semibold leading-tight tracking-tight">
-            Run agent teams with enterprise control.
+        <div>
+          <h1 className="mt-10 max-w-xl font-display text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
+            Security work needs a graph, not another scanner dump.
           </h1>
-          <p className="mt-5 text-base leading-7 text-text-secondary">
-            Secure mission planning, sandboxed execution, live VM inspection, and billing controls for teams shipping with AI agents.
+          <p className="mt-5 max-w-lg text-sm leading-6 text-text-secondary">
+            Coordinate AppSec agents, evidence, risk owners, and remediation from one approved assessment workspace.
           </p>
-          <div className="mt-8 grid grid-cols-3 gap-3">
-            {["SSO ready", "VM sandbox", "Audit logs"].map((item) => (
-              <div key={item} className="rounded-lg border border-border bg-bg-surface p-3 text-sm text-text-secondary">
-                {item}
-              </div>
-            ))}
-          </div>
         </div>
-        <p className="text-xs text-text-muted">SOC2-ready controls for enterprise workspaces.</p>
+        <p className="mt-8 text-xs text-text-muted">Owned environments only. Scope gates enforced before execution.</p>
       </section>
-      <section className="flex items-center justify-center p-10">
-        <div className="w-full max-w-md rounded-xl border border-border bg-bg-surface p-8 shadow-2xl">
-          <h2 className="text-2xl font-semibold">Sign in</h2>
-          <p className="mt-2 text-sm text-text-muted">Use your company identity provider to enter Mission Control.</p>
+      <section className="flex items-center justify-center p-6 lg:p-10">
+        <div className="w-full max-w-md rounded-xl border border-border bg-bg-surface p-8 risk-shadow">
+          <h2 className="font-display text-2xl font-semibold">Sign in</h2>
+          <p className="mt-2 text-sm text-text-muted">Use your workspace identity provider.</p>
           <div className="mt-8 space-y-3">
-            <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-4 py-3 text-sm font-medium text-white">
-              Continue with SSO <ArrowRight className="h-4 w-4" />
+            <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-white">
+              Continue with SSO
             </button>
-            <button className="w-full rounded-lg border border-border px-4 py-3 text-sm text-text-secondary">
-              Continue with Google
+            <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 text-sm text-text-secondary">
+              Continue with email
             </button>
-          </div>
-          <div className="mt-6 space-y-3">
-            <label className="block">
-              <span className="text-xs text-text-muted">Work email</span>
-              <input className="mt-1 w-full rounded-lg border border-border bg-bg-elevated px-3 py-2.5 text-sm outline-none" value="priya@company.com" readOnly />
-            </label>
-            <label className="block">
-              <span className="text-xs text-text-muted">Password</span>
-              <input className="mt-1 w-full rounded-lg border border-border bg-bg-elevated px-3 py-2.5 text-sm outline-none" value="••••••••••••" readOnly />
-            </label>
           </div>
         </div>
       </section>

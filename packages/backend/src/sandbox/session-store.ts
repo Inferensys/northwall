@@ -5,7 +5,7 @@ import { pipeline } from "node:stream/promises";
 
 // ─── SessionStore ─────────────────────────────────────────────────────────────
 // Host-side JSONL and workspace file persistence.
-// Storage layout: ~/.stallion/sessions/<sessionId>/
+// Storage layout: ~/.Northwall/sessions/<sessionId>/
 //   - <sessionId>.jsonl   — JSONL events for session resume
 //   - workspace.tar       — workspace tar archive
 

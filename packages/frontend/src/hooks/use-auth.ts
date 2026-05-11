@@ -15,7 +15,7 @@ export function useAuth() {
     if (DEV_BYPASS) {
       setUser({
         id: "dev-user-001",
-        email: "dev@stallion.local",
+        email: "dev@northwall.local",
         app_metadata: {},
         user_metadata: {},
         aud: "authenticated",

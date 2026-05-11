@@ -1,5 +1,5 @@
 {
-  "name": "stallion",
+  "name": "northwall",
   "private": true,
   "workspaces": [
     "packages/shared",
@@ -9,10 +9,10 @@
     "packages/agent-control"
   ],
   "scripts": {
-    "dev:backend": "npm -w @stallion/backend run dev",
-    "dev:frontend": "npm -w @stallion/frontend run dev",
-    "dev:runtime": "npm -w @stallion/agent-runtime run dev",
-    "build": "npm -w @stallion/frontend run build",
+    "dev:backend": "npm -w @northwall/backend run dev",
+    "dev:frontend": "npm -w @northwall/frontend run dev",
+    "dev:runtime": "npm -w @northwall/agent-runtime run dev",
+    "build": "npm -w @northwall/frontend run build",
     "typecheck": "npm --workspaces run typecheck"
   }
 }
