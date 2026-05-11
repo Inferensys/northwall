@@ -1,5 +1,6 @@
 {
   "name": "northwall",
+  "description": "Agentic SOC platform for multi-agent security operations, alert triage, investigation graphs, and owner handoff.",
   "private": true,
   "workspaces": [
     "packages/shared",

@@ -90,7 +90,7 @@ export class AssessmentManager {
     };
 
     this.assessments.set(id, assessment);
-    this.emit(id, "repo_selected", `Selected ${repository.fullName} on ${assessment.branch}`);
+    this.emit(id, "repo_selected", `Selected source ${repository.fullName} on ${assessment.branch}`);
     await this.save(id);
     return assessment;
   }
@@ -98,15 +98,15 @@ export class AssessmentManager {
   async understand(id: string, userId: string): Promise<Assessment> {
     const assessment = this.requireOwnedAssessment(id, userId);
     if (!canTransitionAssessment(assessment.phase, "understanding") && assessment.phase !== "understanding") {
-      throw new Error("Understanding can only start after selecting a repository.");
+      throw new Error("Context building can only start after selecting a source.");
     }
 
     this.setPhase(assessment, "understanding");
-    this.emit(id, "understanding_started", "Indexing repository structure and security-sensitive surfaces");
+    this.emit(id, "understanding_started", "Building investigation context from source, ownership, and security-sensitive surfaces");
     const token = await this.requireToken(userId);
     const snapshot = await this.analyzer.analyze(token, assessment.repository, assessment.branch);
     this.applySnapshot(assessment, snapshot);
-    this.emit(id, "graph_updated", `Mapped ${snapshot.graph.nodes.length} graph nodes from ${snapshot.inventory.files} files`, {
+    this.emit(id, "graph_updated", `Mapped ${snapshot.graph.nodes.length} investigation graph nodes from ${snapshot.inventory.files} files`, {
       nodes: snapshot.graph.nodes.length,
       edges: snapshot.graph.edges.length,
     });
@@ -117,7 +117,7 @@ export class AssessmentManager {
   async plan(id: string, userId: string): Promise<Assessment> {
     const assessment = this.requireOwnedAssessment(id, userId);
     if (!assessment.graph || assessment.phase !== "understanding") {
-      throw new Error("Run understanding before planning.");
+      throw new Error("Build context before planning.");
     }
 
     const plan = await this.ai.generatePlan({
@@ -128,7 +128,7 @@ export class AssessmentManager {
     });
     assessment.plan = plan;
     this.setPhase(assessment, "plan_ready");
-    this.emit(id, "plan_ready", `Plan ready with ${plan.agents.length} agents and ${plan.tasks.length} tasks`);
+    this.emit(id, "plan_ready", `Response plan ready with ${plan.agents.length} agents and ${plan.tasks.length} tasks`);
     await this.save(id);
     return assessment;
   }
@@ -140,7 +140,7 @@ export class AssessmentManager {
     }
 
     this.setPhase(assessment, "approved");
-    this.emit(id, "plan_approved", "Assessment plan approved for static execution");
+    this.emit(id, "plan_approved", "SOC response plan approved for safe execution");
     await this.save(id);
     return assessment;
   }
@@ -152,7 +152,7 @@ export class AssessmentManager {
     }
 
     this.setPhase(assessment, "running");
-    this.emit(id, "run_started", "Starting static and dependency assessment");
+    this.emit(id, "run_started", "Starting agentic SOC run");
 
     for (const agent of assessment.plan.agents) {
       agent.status = "working";

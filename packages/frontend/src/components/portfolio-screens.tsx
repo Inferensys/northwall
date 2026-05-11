@@ -126,10 +126,10 @@ export function StatCard({
 
 export function AdminScreen() {
   const rows = [
-    ["AcmePay AppSec assessment", "Running", "7 agents", "4 findings", "2m ago"],
-    ["Customer Portal tenant review", "Review", "5 agents", "3 findings", "18m ago"],
-    ["Payments webhook check", "Remediating", "4 agents", "2 findings", "41m ago"],
-    ["CI dependency sweep", "Verified", "3 agents", "1 finding", "2h ago"],
+    ["AcmePay identity incident", "Running", "7 agents", "4 findings", "2m ago"],
+    ["Customer Portal alert cluster", "Review", "5 agents", "3 findings", "18m ago"],
+    ["Payments webhook case", "Responding", "4 agents", "2 findings", "41m ago"],
+    ["CI dependency signal", "Verified", "3 agents", "1 finding", "2h ago"],
   ];
 
   return (
@@ -155,7 +155,7 @@ export function AdminScreen() {
             <table className="w-full text-left text-sm">
               <thead className="text-xs uppercase tracking-[0.16em] text-text-muted">
                 <tr className="border-b border-border">
-                  {["Assessment", "Status", "Team", "Risk", "Updated"].map((head) => (
+                  {["SOC run", "Status", "Agents", "Risk", "Updated"].map((head) => (
                     <th key={head} className="px-5 py-3 font-medium">{head}</th>
                   ))}
                 </tr>
@@ -192,9 +192,9 @@ export function AdminScreen() {
 
 export function BillingScreen() {
   const invoices = [
-    ["INV-2026-05", "May assessments", "$1,820.00", "Paid"],
-    ["INV-2026-04", "April assessments", "$1,395.50", "Paid"],
-    ["INV-2026-03", "March assessments", "$1,104.80", "Paid"],
+    ["INV-2026-05", "May SOC runs", "$1,820.00", "Paid"],
+    ["INV-2026-04", "April SOC runs", "$1,395.50", "Paid"],
+    ["INV-2026-03", "March SOC runs", "$1,104.80", "Paid"],
   ];
 
   return (
