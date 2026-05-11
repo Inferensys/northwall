@@ -1,14 +1,17 @@
 ![Northwall cover](docs/northwall-cover.svg)
 
-SOC teams don't need another alert queue.
+Northwall is an Agentic SOC platform for teams that want multi-agent orchestration using graph-based understanding: custom team of multi-agent specialists, build a knowledge graph, vulnerability analysis & search loops, and GitHub integration.
 
-Northwall is an Agentic SOC product for teams that want agents to do the connective work: pull source context, map ownership, build an investigation graph, draft a response plan, and turn approved findings into GitHub issues.
-
-The analyst still makes the call. Northwall makes the work visible.
-
-It is built for the messy middle between tools like CrowdStrike, Microsoft Sentinel, GitHub, Snyk, Semgrep, Jira, and Slack. The product starts with GitHub because code, owners, dependencies, CI, and work items are where a lot of response work actually ends up.
-
-Northwall fits the searches buyers are already making: agentic SOC, multi-agent security operations, SOC automation, alert triage, threat investigation, incident response automation, investigation graph, security work item creation, and human-in-the-loop security operations.
+If you're looking to build a custom agentic SOC tool / platform for your organization, Northwall would be a good fit to start from; whether it is: 
+- Multi Agent Orchestration,
+- Agentic security operations,
+- SOC automation,
+- Alert triage,
+- Vulnerability / threat investigation,
+- Incident response automation,
+- Investigation graph,
+- Security work item creation, or
+- Human-in-the-loop (HITL) security operations.
 
 ## Demo
 
