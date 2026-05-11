@@ -16,6 +16,10 @@ Northwall is an agentic SOC product for multi-agent security operations. It show
 
 It is not a chatbot bolted onto a SIEM. It is a workflow layer for SOC automation where every agent has a job, every action is visible, and every finding has evidence attached.
 
+This is the category EY is pointing at with [Agentic SOC](https://www.ey.com/en_in/insights/ai/agentic-soc-multi-agent-orchestration-for-next-gen-security-operations): defenders moving from alert handling to supervising agent teams that can reason across the environment. Northwall shows that pattern in product form, starting with GitHub context and work-item creation.
+
+Useful market terms, written plainly: agentic SOC, multi-agent security operations, SOC automation, alert triage, threat investigation, incident response, investigation graph, response plan, human-in-the-loop security, SIEM, EDR, cloud security, identity security, GitHub security, Jira security workflows.
+
 ## Core Flow
 
 ```text

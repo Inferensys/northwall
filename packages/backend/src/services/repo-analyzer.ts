@@ -154,7 +154,7 @@ function buildGraph(repo: GitHubRepository, inventory: RepoSnapshot["inventory"]
     nodes,
     edges,
     confidence: Math.min(95, 55 + nodes.length * 7),
-    summary: `Indexed ${repo.fullName}; mapped ${nodes.length} system areas from code, dependencies, config, and CI.`,
+    summary: `Indexed ${repo.fullName}; mapped ${nodes.length} investigation areas from code, ownership clues, dependencies, config, and CI.`,
   };
 }
 

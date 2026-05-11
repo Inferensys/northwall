@@ -718,7 +718,7 @@ function IssuePreview({ finding }: { finding: VulnerabilityFinding | null }) {
   return (
     <div className="p-4">
       <div className="mb-4 flex flex-wrap gap-2">
-        {["northwall", "security", finding.severity, finding.confidence, ...finding.labels].filter(Boolean).map((label) => (
+        {["northwall", "agentic-soc", "security-operations", finding.severity, finding.confidence, ...finding.labels].filter(Boolean).map((label) => (
           <span key={label} className="rounded-md border border-border bg-bg-elevated px-2 py-1 text-xs font-medium text-text-secondary">
             {label}
           </span>

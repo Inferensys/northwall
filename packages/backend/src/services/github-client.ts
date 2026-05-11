@@ -146,7 +146,7 @@ export class GitHubClient {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: label,
-            color: label === "security" ? "d73a4a" : "0e8a16",
+            color: label === "security-operations" || label === "agentic-soc" ? "051914" : label === "security" ? "d73a4a" : "0e8a16",
           }),
         });
       } catch {
