@@ -27,7 +27,6 @@ jobs:
           test -n "${{ secrets.AZURE_TENANT_ID }}" || { echo "::error::AZURE_TENANT_ID is not set"; exit 1; }
           test -n "${{ secrets.AZURE_SUBSCRIPTION_ID }}" || { echo "::error::AZURE_SUBSCRIPTION_ID is not set"; exit 1; }
           test -n "${{ secrets.TOKEN_ENCRYPTION_KEY }}" || { echo "::error::TOKEN_ENCRYPTION_KEY is not set"; exit 1; }
-          test -n "${{ secrets.OPENAI_API_KEY }}" || { echo "::error::OPENAI_API_KEY is not set"; exit 1; }
           test -n "${{ vars.OPENAI_BASE_URL }}" || { echo "::error::OPENAI_BASE_URL repository variable is not set"; exit 1; }
           test -n "${{ vars.AZURE_RESOURCE_GROUP }}" || { echo "::error::AZURE_RESOURCE_GROUP repository variable is not set"; exit 1; }
           test -n "${{ vars.AZURE_CONTAINER_REGISTRY }}" || { echo "::error::AZURE_CONTAINER_REGISTRY repository variable is not set"; exit 1; }
@@ -60,21 +59,35 @@ jobs:
 
       - name: Deploy backend
         run: |
+          SECRET_ARGS=(token-encryption-key="${{ secrets.TOKEN_ENCRYPTION_KEY }}")
+          ENV_ARGS=(
+            NODE_ENV=production
+            PORT=4000
+            OPENAI_BASE_URL="${{ vars.OPENAI_BASE_URL }}"
+            OPENAI_MODEL="${{ vars.OPENAI_MODEL || 'gpt-5.5' }}"
+            SUPABASE_URL="${{ vars.SUPABASE_URL }}"
+            ALLOWED_ORIGINS="${{ vars.ALLOWED_ORIGINS || 'https://northwall.inferensys.com' }}"
+            DEV_AUTH_BYPASS=false
+            TOKEN_ENCRYPTION_KEY=secretref:token-encryption-key
+          )
+
+          if [ -n "${{ secrets.OPENAI_API_KEY }}" ]; then
+            SECRET_ARGS+=(openai-api-key="${{ secrets.OPENAI_API_KEY }}")
+            ENV_ARGS+=(OPENAI_API_KEY=secretref:openai-api-key)
+          else
+            echo "::warning::OPENAI_API_KEY is not set. Backend will deploy, but model-backed planning will use fallback behavior."
+          fi
+
           if az containerapp show --name "$BACKEND_APP" --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" >/dev/null 2>&1; then
+            az containerapp secret set \
+              --name "$BACKEND_APP" \
+              --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+              --secrets "${SECRET_ARGS[@]}"
             az containerapp update \
               --name "$BACKEND_APP" \
               --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
               --image "$ACR_LOGIN_SERVER/$BACKEND_IMAGE:${{ github.sha }}" \
-              --set-env-vars \
-                NODE_ENV=production \
-                PORT=4000 \
-                OPENAI_BASE_URL="${{ vars.OPENAI_BASE_URL }}" \
-                OPENAI_MODEL="${{ vars.OPENAI_MODEL || 'gpt-5.5' }}" \
-                SUPABASE_URL="${{ vars.SUPABASE_URL }}" \
-                ALLOWED_ORIGINS="${{ vars.ALLOWED_ORIGINS || 'https://northwall.inferensys.com' }}" \
-                DEV_AUTH_BYPASS=false \
-                TOKEN_ENCRYPTION_KEY=secretref:token-encryption-key \
-                OPENAI_API_KEY=secretref:openai-api-key
+              --set-env-vars "${ENV_ARGS[@]}"
           else
             az containerapp create \
               --name "$BACKEND_APP" \
@@ -86,19 +99,8 @@ jobs:
               --registry-server "$ACR_LOGIN_SERVER" \
               --registry-identity "${{ vars.AZURE_ACR_PULL_IDENTITY_ID }}" \
               --user-assigned "${{ vars.AZURE_ACR_PULL_IDENTITY_ID }}" \
-              --secrets \
-                token-encryption-key="${{ secrets.TOKEN_ENCRYPTION_KEY }}" \
-                openai-api-key="${{ secrets.OPENAI_API_KEY }}" \
-              --env-vars \
-                NODE_ENV=production \
-                PORT=4000 \
-                OPENAI_BASE_URL="${{ vars.OPENAI_BASE_URL }}" \
-                OPENAI_MODEL="${{ vars.OPENAI_MODEL || 'gpt-5.5' }}" \
-                SUPABASE_URL="${{ vars.SUPABASE_URL }}" \
-                ALLOWED_ORIGINS="${{ vars.ALLOWED_ORIGINS || 'https://northwall.inferensys.com' }}" \
-                DEV_AUTH_BYPASS=false \
-                TOKEN_ENCRYPTION_KEY=secretref:token-encryption-key \
-                OPENAI_API_KEY=secretref:openai-api-key
+              --secrets "${SECRET_ARGS[@]}" \
+              --env-vars "${ENV_ARGS[@]}"
           fi
 
           BACKEND_FQDN=$(az containerapp show \
