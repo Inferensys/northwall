@@ -1,0 +1,146 @@
+name: Deploy Northwall
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  BACKEND_APP: northwall-backend
+  FRONTEND_APP: northwall-frontend
+  BACKEND_IMAGE: northwall-backend
+  FRONTEND_IMAGE: northwall-frontend
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check required configuration
+        run: |
+          test -n "${{ secrets.AZURE_CLIENT_ID }}" || { echo "::error::AZURE_CLIENT_ID is not set"; exit 1; }
+          test -n "${{ secrets.AZURE_TENANT_ID }}" || { echo "::error::AZURE_TENANT_ID is not set"; exit 1; }
+          test -n "${{ secrets.AZURE_SUBSCRIPTION_ID }}" || { echo "::error::AZURE_SUBSCRIPTION_ID is not set"; exit 1; }
+          test -n "${{ secrets.TOKEN_ENCRYPTION_KEY }}" || { echo "::error::TOKEN_ENCRYPTION_KEY is not set"; exit 1; }
+          test -n "${{ secrets.OPENAI_API_KEY }}" || { echo "::error::OPENAI_API_KEY is not set"; exit 1; }
+          test -n "${{ vars.OPENAI_BASE_URL }}" || { echo "::error::OPENAI_BASE_URL repository variable is not set"; exit 1; }
+          test -n "${{ vars.AZURE_RESOURCE_GROUP }}" || { echo "::error::AZURE_RESOURCE_GROUP repository variable is not set"; exit 1; }
+          test -n "${{ vars.AZURE_CONTAINER_REGISTRY }}" || { echo "::error::AZURE_CONTAINER_REGISTRY repository variable is not set"; exit 1; }
+          test -n "${{ vars.AZURE_CONTAINERAPPS_ENV }}" || { echo "::error::AZURE_CONTAINERAPPS_ENV repository variable is not set"; exit 1; }
+          test -n "${{ vars.AZURE_ACR_PULL_IDENTITY_ID }}" || { echo "::error::AZURE_ACR_PULL_IDENTITY_ID repository variable is not set"; exit 1; }
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Resolve registry
+        run: |
+          ACR_LOGIN_SERVER=$(az acr show \
+            --name "${{ vars.AZURE_CONTAINER_REGISTRY }}" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --query loginServer -o tsv)
+          echo "ACR_LOGIN_SERVER=$ACR_LOGIN_SERVER" >> "$GITHUB_ENV"
+
+      - name: Build and push backend
+        run: |
+          az acr login --name "${{ vars.AZURE_CONTAINER_REGISTRY }}"
+          docker build -f Dockerfile.backend \
+            -t "$ACR_LOGIN_SERVER/$BACKEND_IMAGE:${{ github.sha }}" \
+            -t "$ACR_LOGIN_SERVER/$BACKEND_IMAGE:latest" .
+          docker push "$ACR_LOGIN_SERVER/$BACKEND_IMAGE:${{ github.sha }}"
+          docker push "$ACR_LOGIN_SERVER/$BACKEND_IMAGE:latest"
+
+      - name: Deploy backend
+        run: |
+          if az containerapp show --name "$BACKEND_APP" --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" >/dev/null 2>&1; then
+            az containerapp update \
+              --name "$BACKEND_APP" \
+              --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+              --image "$ACR_LOGIN_SERVER/$BACKEND_IMAGE:${{ github.sha }}" \
+              --set-env-vars \
+                NODE_ENV=production \
+                PORT=4000 \
+                OPENAI_BASE_URL="${{ vars.OPENAI_BASE_URL }}" \
+                OPENAI_MODEL="${{ vars.OPENAI_MODEL || 'gpt-5.5' }}" \
+                SUPABASE_URL="${{ vars.SUPABASE_URL }}" \
+                ALLOWED_ORIGINS="${{ vars.ALLOWED_ORIGINS || 'https://northwall.inferensys.com' }}" \
+                DEV_AUTH_BYPASS=false \
+                TOKEN_ENCRYPTION_KEY=secretref:token-encryption-key \
+                OPENAI_API_KEY=secretref:openai-api-key
+          else
+            az containerapp create \
+              --name "$BACKEND_APP" \
+              --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+              --environment "${{ vars.AZURE_CONTAINERAPPS_ENV }}" \
+              --image "$ACR_LOGIN_SERVER/$BACKEND_IMAGE:${{ github.sha }}" \
+              --target-port 4000 \
+              --ingress external \
+              --registry-server "$ACR_LOGIN_SERVER" \
+              --registry-identity "${{ vars.AZURE_ACR_PULL_IDENTITY_ID }}" \
+              --user-assigned "${{ vars.AZURE_ACR_PULL_IDENTITY_ID }}" \
+              --secrets \
+                token-encryption-key="${{ secrets.TOKEN_ENCRYPTION_KEY }}" \
+                openai-api-key="${{ secrets.OPENAI_API_KEY }}" \
+              --env-vars \
+                NODE_ENV=production \
+                PORT=4000 \
+                OPENAI_BASE_URL="${{ vars.OPENAI_BASE_URL }}" \
+                OPENAI_MODEL="${{ vars.OPENAI_MODEL || 'gpt-5.5' }}" \
+                SUPABASE_URL="${{ vars.SUPABASE_URL }}" \
+                ALLOWED_ORIGINS="${{ vars.ALLOWED_ORIGINS || 'https://northwall.inferensys.com' }}" \
+                DEV_AUTH_BYPASS=false \
+                TOKEN_ENCRYPTION_KEY=secretref:token-encryption-key \
+                OPENAI_API_KEY=secretref:openai-api-key
+          fi
+
+          BACKEND_FQDN=$(az containerapp show \
+            --name "$BACKEND_APP" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --query properties.configuration.ingress.fqdn -o tsv)
+          echo "BACKEND_URL=https://$BACKEND_FQDN" >> "$GITHUB_ENV"
+
+      - name: Build and push frontend
+        run: |
+          docker build -f Dockerfile.frontend \
+            --build-arg NEXT_PUBLIC_BACKEND_URL="$BACKEND_URL" \
+            --build-arg NEXT_PUBLIC_DEV_AUTH_BYPASS=false \
+            --build-arg NEXT_PUBLIC_SUPABASE_URL="${{ vars.NEXT_PUBLIC_SUPABASE_URL }}" \
+            --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" \
+            -t "$ACR_LOGIN_SERVER/$FRONTEND_IMAGE:${{ github.sha }}" \
+            -t "$ACR_LOGIN_SERVER/$FRONTEND_IMAGE:latest" .
+          docker push "$ACR_LOGIN_SERVER/$FRONTEND_IMAGE:${{ github.sha }}"
+          docker push "$ACR_LOGIN_SERVER/$FRONTEND_IMAGE:latest"
+
+      - name: Deploy frontend
+        run: |
+          if az containerapp show --name "$FRONTEND_APP" --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" >/dev/null 2>&1; then
+            az containerapp update \
+              --name "$FRONTEND_APP" \
+              --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+              --image "$ACR_LOGIN_SERVER/$FRONTEND_IMAGE:${{ github.sha }}"
+          else
+            az containerapp create \
+              --name "$FRONTEND_APP" \
+              --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+              --environment "${{ vars.AZURE_CONTAINERAPPS_ENV }}" \
+              --image "$ACR_LOGIN_SERVER/$FRONTEND_IMAGE:${{ github.sha }}" \
+              --target-port 3000 \
+              --ingress external \
+              --registry-server "$ACR_LOGIN_SERVER" \
+              --registry-identity "${{ vars.AZURE_ACR_PULL_IDENTITY_ID }}" \
+              --user-assigned "${{ vars.AZURE_ACR_PULL_IDENTITY_ID }}"
+          fi
+
+          FRONTEND_FQDN=$(az containerapp show \
+            --name "$FRONTEND_APP" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --query properties.configuration.ingress.fqdn -o tsv)
+          echo "Northwall frontend: https://$FRONTEND_FQDN"

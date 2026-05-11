@@ -1,0 +1,34 @@
+FROM node:22-slim
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY packages/shared/package.json packages/shared/package.json
+COPY packages/agent-runtime/package.json packages/agent-runtime/package.json
+COPY packages/backend/package.json packages/backend/package.json
+COPY packages/frontend/package.json packages/frontend/package.json
+COPY packages/agent-control/package.json packages/agent-control/package.json
+
+RUN npm ci
+
+COPY . .
+
+ARG NEXT_PUBLIC_BACKEND_URL
+ARG NEXT_PUBLIC_DEV_AUTH_BYPASS=false
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
+ENV NEXT_PUBLIC_DEV_AUTH_BYPASS=$NEXT_PUBLIC_DEV_AUTH_BYPASS
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+RUN npm -w @northwall/frontend run build
+
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+EXPOSE 3000
+
+CMD ["npm", "-w", "@northwall/frontend", "run", "start", "--", "-H", "0.0.0.0", "-p", "3000"]

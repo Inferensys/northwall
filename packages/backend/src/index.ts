@@ -26,12 +26,16 @@ const localOrigins = [
   "http://localhost:3004",
   "http://localhost:3005",
 ];
+const allowedOrigins = [
+  ...localOrigins,
+  ...(process.env.ALLOWED_ORIGINS?.split(",").map((origin) => origin.trim()).filter(Boolean) ?? []),
+];
 
 // CORS for frontend
 app.use(
   "/*",
   cors({
-    origin: localOrigins,
+    origin: allowedOrigins,
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
   })
@@ -64,7 +68,7 @@ const server = serve({ fetch: app.fetch, port }, (info) => {
 // WebSocket server
 const io = new SocketServer(server, {
   cors: {
-    origin: localOrigins,
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
   },
 });
