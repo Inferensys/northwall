@@ -1,20 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Playfair_Display } from "next/font/google";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { NorthwallMark } from "./logo";
+import { NorthwallLogo } from "./logo";
 import type { Mission } from "@northwall/shared";
 import type { User } from "@supabase/supabase-js";
-
-const logoFont = Playfair_Display({
-  weight: "700",
-  subsets: ["latin"],
-  style: "italic",
-  display: "swap",
-});
 
 const STATUS_COLOR: Record<string, string> = {
   exploring: "bg-accent",
@@ -133,7 +125,7 @@ export function Sidebar({
     <aside
       className="flex h-screen shrink-0 border-r border-white/[0.06] transition-[width] duration-250 ease-[cubic-bezier(0.25,0.1,0.25,1)]"
       style={{
-        backgroundColor: "#0e0e16",
+        backgroundColor: "#051914",
         width: collapsed ? 52 : 260,
       }}
     >
@@ -146,15 +138,15 @@ export function Sidebar({
       >
         <button
           onClick={onToggle}
-          className="flex items-center justify-center w-9 h-9 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/[0.08] transition-colors"
+          className="flex items-center justify-center w-9 h-9 rounded-lg text-white/55 hover:text-white hover:bg-white/[0.08] transition-colors"
           title="Open sidebar"
         >
           <SidebarIcon />
         </button>
         <button
           onClick={onNewMission}
-          className="flex items-center justify-center w-9 h-9 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/[0.08] transition-colors"
-          title="New Mission"
+          className="flex items-center justify-center w-9 h-9 rounded-lg text-white/55 hover:text-white hover:bg-white/[0.08] transition-colors"
+          title="New review"
         >
           <PlusIcon />
         </button>
@@ -169,7 +161,7 @@ export function Sidebar({
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-xs font-medium text-accent">
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-medium text-white">
                 {displayName.charAt(0).toUpperCase()}
               </div>
             )}
@@ -187,14 +179,11 @@ export function Sidebar({
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3.5 shrink-0">
           <div className="flex items-center gap-2.5">
-            <NorthwallMark size={20} className="text-accent" />
-            <span className={cn(logoFont.className, "text-[17px] text-text-primary tracking-tight select-none")}>
-              Northwall
-            </span>
+            <NorthwallLogo inverted className="text-[17px]" />
           </div>
           <button
             onClick={onToggle}
-            className="p-1.5 rounded-md text-text-muted hover:text-text-primary hover:bg-white/[0.06] transition-colors"
+            className="p-1.5 rounded-md text-white/45 hover:text-white hover:bg-white/[0.06] transition-colors"
             title="Close sidebar"
           >
             <SidebarIcon />
@@ -205,10 +194,10 @@ export function Sidebar({
         <div className="px-3 pb-3 shrink-0">
           <button
             onClick={onNewMission}
-            className="w-full flex items-center gap-2.5 rounded-lg border border-white/[0.08] px-3.5 py-2.5 text-[13px] text-text-secondary hover:bg-white/[0.06] hover:text-text-primary transition-colors"
+            className="w-full flex items-center gap-2.5 rounded-lg border border-white/[0.08] px-3.5 py-2.5 text-[13px] text-white/70 hover:bg-white/[0.06] hover:text-white transition-colors"
           >
             <PlusIcon />
-            New Mission
+            New review
           </button>
         </div>
 
@@ -219,7 +208,7 @@ export function Sidebar({
         <div className="flex-1 overflow-y-auto px-2 pt-3 pb-4">
           {groups.map((group) => (
             <div key={group.label} className="mb-3.5">
-              <p className="px-2.5 pb-1.5 text-[10px] font-semibold text-text-muted/50 uppercase tracking-widest">
+              <p className="px-2.5 pb-1.5 text-[10px] font-semibold text-white/35 uppercase tracking-widest">
                 {group.label}
               </p>
               <div className="space-y-0.5">
@@ -232,8 +221,8 @@ export function Sidebar({
                       className={cn(
                         "w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors group",
                         isActive
-                          ? "bg-white/[0.08] text-text-primary"
-                          : "text-text-secondary hover:bg-white/[0.05] hover:text-text-primary"
+                          ? "bg-white/[0.1] text-white"
+                          : "text-white/65 hover:bg-white/[0.05] hover:text-white"
                       )}
                     >
                       <span
@@ -244,9 +233,9 @@ export function Sidebar({
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] truncate leading-tight">
-                          {m.plan?.title ?? (m.status === "exploring" || m.status === "planning" ? "New mission" : m.id.slice(0, 12))}
+                          {m.plan?.title ?? (m.status === "exploring" || m.status === "planning" ? "New review" : m.id.slice(0, 12))}
                         </p>
-                        <p className="text-[10px] text-text-muted/60 mt-0.5">
+                        <p className="text-[10px] text-white/45 mt-0.5">
                           {m.status} &middot; {formatRelativeTime(m.completedAt ?? m.startedAt ?? m.createdAt)}
                         </p>
                       </div>
@@ -259,7 +248,7 @@ export function Sidebar({
 
           {missions.length === 0 && (
             <div className="px-2 py-8 text-center">
-              <p className="text-xs text-text-muted/40">No missions yet</p>
+              <p className="text-xs text-white/40">No reviews yet</p>
             </div>
           )}
         </div>
@@ -277,19 +266,19 @@ export function Sidebar({
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-xs font-medium text-accent shrink-0">
+                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-medium text-white shrink-0">
                   {displayName.charAt(0).toUpperCase()}
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] text-text-primary truncate leading-tight">
+                <p className="text-[13px] text-white truncate leading-tight">
                   {displayName}
                 </p>
               </div>
               {!PORTFOLIO_MODE && (
                 <button
                   onClick={handleSignOut}
-                  className="p-1.5 rounded-md text-text-muted hover:text-text-primary hover:bg-white/[0.06] transition-colors shrink-0"
+                  className="p-1.5 rounded-md text-white/45 hover:text-white hover:bg-white/[0.06] transition-colors shrink-0"
                   title="Sign out"
                 >
                   <LogOutIcon />

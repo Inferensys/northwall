@@ -20,12 +20,12 @@ import {
   WalletCards,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { NorthwallMark } from "@/components/logo";
+import { NorthwallLogo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import { evidenceTimeline, findings, systemGraph } from "@/lib/northwall-demo";
 
 const nav = [
-  { href: "/", label: "Assessment" },
+  { href: "/", label: "SOC Run" },
   { href: "/admin", label: "Admin" },
   { href: "/team", label: "Team" },
   { href: "/integrations", label: "Integrations" },
@@ -42,13 +42,10 @@ export function PortfolioShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-bg bg-grid text-text-primary">
-      <aside className="fixed inset-y-0 left-0 w-[260px] border-r border-white/10 bg-[#17262c]">
+    <div className="min-h-screen bg-bg text-text-primary">
+      <aside className="fixed inset-y-0 left-0 w-[260px] border-r border-white/10 bg-[#051914]">
         <div className="flex items-center gap-2.5 px-5 py-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/8 text-teal-300">
-            <NorthwallMark size={22} />
-          </div>
-          <span className="font-display text-lg font-semibold tracking-tight text-white">Northwall</span>
+          <NorthwallLogo inverted className="text-lg" />
         </div>
         <nav className="px-3">
           {nav.map((item) => (
@@ -58,8 +55,8 @@ export function PortfolioShell({
               className={cn(
                 "block rounded-lg px-3 py-2.5 text-sm transition-colors",
                 active === item.label
-                  ? "border border-white/10 bg-teal-500/15 text-white"
-                  : "text-slate-400 hover:bg-white/[0.05] hover:text-white",
+                  ? "border border-white/10 bg-white/10 text-white"
+                  : "text-white/60 hover:bg-white/[0.05] hover:text-white",
               )}
             >
               {item.label}
@@ -67,9 +64,9 @@ export function PortfolioShell({
           ))}
         </nav>
         <div className="absolute bottom-0 left-0 right-0 border-t border-accent/10 p-4">
-          <div className="rounded-lg border border-accent/15 bg-bg-surface p-3">
-            <p className="text-xs font-medium text-text-primary">Security workspace</p>
-            <p className="mt-1 text-[11px] text-text-muted">SSO, audit logs, scope gates, and approval rules enabled</p>
+          <div className="rounded-md border border-white/10 bg-white/[0.06] p-3">
+            <p className="text-xs font-medium text-white">Agentic SOC</p>
+            <p className="mt-1 text-[11px] leading-5 text-white/55">Triage, investigation, response, and owner handoff in one run.</p>
           </div>
         </div>
       </aside>
@@ -88,14 +85,14 @@ export function PageHeader({
   action?: string;
 }) {
   return (
-    <header className="border-b border-accent/10 bg-bg/80 px-8 py-5 backdrop-blur">
+    <header className="border-b border-border bg-white px-8 py-5">
       <div className="flex items-center justify-between gap-6">
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-text-primary">{title}</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-normal text-text-primary">{title}</h1>
           <p className="mt-1 text-sm text-text-muted">{description}</p>
         </div>
         {action && (
-          <button className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm">
+          <button className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm">
             {action}
           </button>
         )}
@@ -116,7 +113,7 @@ export function StatCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-bg-surface p-4">
+    <div className="rounded-md border border-border bg-bg-surface p-4">
       <div className="flex items-center justify-between">
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-text-muted">{label}</p>
         <Icon className="h-4 w-4 text-accent" />
@@ -139,12 +136,12 @@ export function AdminScreen() {
     <PortfolioShell active="Admin">
       <PageHeader
         title="Admin Console"
-        description="Workspace-level view of assessments, agents, risk, policy gates, and remediation health."
+        description="SOC runs, agent actions, open risk, and owner handoff in one place."
         action="Invite Analyst"
       />
       <div className="space-y-6 p-8">
         <div className="grid grid-cols-4 gap-4">
-          <StatCard label="Active assessments" value="12" trend="+4 this week" icon={Activity} />
+          <StatCard label="Active SOC runs" value="12" trend="+4 this week" icon={Activity} />
           <StatCard label="Findings open" value="38" trend="11 high confidence" icon={TriangleAlert} />
           <StatCard label="Graph nodes" value="1,284" trend="Across 9 apps" icon={GitBranch} />
           <StatCard label="Verified fixes" value="76%" trend="+18% this month" icon={CheckCircle2} />
@@ -153,7 +150,7 @@ export function AdminScreen() {
         <div className="grid grid-cols-12 gap-4">
           <section className="col-span-8 rounded-lg border border-border bg-bg-surface">
             <div className="border-b border-border px-5 py-4">
-              <h2 className="font-display text-base font-semibold">Assessment Operations</h2>
+            <h2 className="font-display text-base font-semibold">Security operations</h2>
             </div>
             <table className="w-full text-left text-sm">
               <thead className="text-xs uppercase tracking-[0.16em] text-text-muted">
@@ -177,9 +174,9 @@ export function AdminScreen() {
             </table>
           </section>
           <section className="col-span-4 rounded-lg border border-border bg-bg-surface p-5">
-            <h2 className="font-display text-base font-semibold">Policy Guardrails</h2>
+            <h2 className="font-display text-base font-semibold">Run rules</h2>
             <div className="mt-4 space-y-3">
-              {["Owned scope required", "Rate limits enforced", "Destructive checks disabled", "Owner approval before execution"].map((item) => (
+              {["Owned scope required", "Rate limits enforced", "Destructive checks off", "Owner approval before execution"].map((item) => (
                 <div key={item} className="flex items-center gap-3 rounded-lg bg-bg-elevated px-3 py-2">
                   <ShieldCheck className="h-4 w-4 text-accent" />
                   <span className="text-sm text-text-secondary">{item}</span>
@@ -202,14 +199,14 @@ export function BillingScreen() {
 
   return (
     <PortfolioShell active="Billing">
-      <PageHeader title="Billing & Usage" description="Assessment minutes, agent runs, evidence retention, invoices, and budget controls." action="Update Plan" />
+      <PageHeader title="Billing & Usage" description="Agent minutes, SOC runs, evidence storage, invoices, and budget limits." action="Update Plan" />
       <div className="grid grid-cols-12 gap-4 p-8">
         <section className="col-span-5 rounded-lg border border-border bg-bg-surface p-5">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.18em] text-text-muted">Current plan</p>
               <h2 className="mt-2 font-display text-3xl font-semibold">Security Ops</h2>
-              <p className="mt-1 text-sm text-text-muted">For teams running AppSec agent assessments every week.</p>
+              <p className="mt-1 text-sm text-text-muted">For teams running agent-assisted security operations every week.</p>
             </div>
             <WalletCards className="h-5 w-5 text-accent" />
           </div>
@@ -251,7 +248,7 @@ export function TeamScreen() {
 
   return (
     <PortfolioShell active="Team">
-      <PageHeader title="Team & Access" description="Assign owners, reviewers, and scope approvers for each assessment." action="Add Member" />
+      <PageHeader title="Team & Access" description="Set alert owners, incident reviewers, and scope approvers." action="Add Member" />
       <div className="grid grid-cols-12 gap-4 p-8">
         <section className="col-span-8 rounded-lg border border-border bg-bg-surface">
           <div className="border-b border-border px-5 py-4">
@@ -284,17 +281,17 @@ export function TeamScreen() {
 
 export function IntegrationsScreen() {
   const integrations: Array<[string, string, LucideIcon]> = [
-    ["GitHub", "Repo import, code search, pull request handoff", GitBranch],
-    ["Snyk", "Dependency advisory enrichment", ShieldCheck],
-    ["Semgrep", "Static rule packs and custom checks", Fingerprint],
-    ["Jira", "Remediation tickets and owner sync", PlugZap],
-    ["Postgres", "Schema graph and migration review", Database],
-    ["Stripe", "Webhook and billing flow context", ReceiptText],
+    ["GitHub", "Code context, ownership, and issue handoff", GitBranch],
+    ["CrowdStrike", "Endpoint signals and case context", ShieldCheck],
+    ["Microsoft Sentinel", "SIEM alerts and incident queue", Fingerprint],
+    ["Jira", "Response tasks and owner sync", PlugZap],
+    ["Postgres", "App data context for investigations", Database],
+    ["Stripe", "Payment event context for fraud and abuse cases", ReceiptText],
   ];
 
   return (
     <PortfolioShell active="Integrations">
-      <PageHeader title="Integrations" description="Connect source, scanners, ticketing, evidence stores, and ownership systems." action="Connect Source" />
+      <PageHeader title="Integrations" description="Connect SIEM, EDR, source control, ticketing, evidence storage, and ownership data." action="Connect Source" />
       <div className="grid grid-cols-3 gap-4 p-8">
         {integrations.map(([name, description, Icon]) => {
           const IntegrationIcon = Icon as LucideIcon;
@@ -315,10 +312,10 @@ export function IntegrationsScreen() {
 export function AuditScreen() {
   return (
     <PortfolioShell active="Audit">
-      <PageHeader title="Audit Trail" description="Every scope decision, agent action, evidence attachment, and remediation state change." action="Export Evidence" />
+      <PageHeader title="Audit Trail" description="Scope changes, agent actions, evidence, work item creation, and response review." action="Export Evidence" />
       <div className="grid grid-cols-12 gap-4 p-8">
         <section className="col-span-8 rounded-lg border border-border bg-bg-surface p-5">
-          <h2 className="font-display text-base font-semibold">Event Stream</h2>
+          <h2 className="font-display text-base font-semibold">Event stream</h2>
           <div className="mt-4 space-y-3">
             {evidenceTimeline.map((event) => (
               <div key={`${event[0]}-${event[1]}`} className="grid grid-cols-[70px_150px_1fr] rounded-lg bg-bg-elevated px-4 py-3 text-sm">
@@ -330,7 +327,7 @@ export function AuditScreen() {
           </div>
         </section>
         <section className="col-span-4 rounded-lg border border-border bg-bg-surface p-5">
-          <h2 className="font-display text-base font-semibold">Compliance Posture</h2>
+          <h2 className="font-display text-base font-semibold">Control mapping</h2>
           <div className="mt-4 space-y-3">
             {["ASVS mapped findings", "CWE attached where relevant", "KEV enrichment enabled", "Reviewer approval retained"].map((item) => (
               <div key={item} className="flex items-center gap-3 rounded-lg bg-bg-elevated px-3 py-2">
@@ -348,7 +345,7 @@ export function AuditScreen() {
 export function SettingsScreen() {
   return (
     <PortfolioShell active="Settings">
-      <PageHeader title="Settings" description="Authentication, scope policy, runtime defaults, and evidence retention." action="Save Changes" />
+      <PageHeader title="Settings" description="Authentication, scope policy, run defaults, and evidence retention." action="Save Changes" />
       <div className="grid grid-cols-12 gap-4 p-8">
         <section className="col-span-6 rounded-lg border border-border bg-bg-surface p-5">
           <h2 className="font-display text-base font-semibold">Authentication</h2>
@@ -372,12 +369,12 @@ export function SettingsScreen() {
           </div>
         </section>
         <section className="col-span-6 rounded-lg border border-border bg-bg-surface p-5">
-          <h2 className="font-display text-base font-semibold">Runtime Defaults</h2>
+          <h2 className="font-display text-base font-semibold">Run defaults</h2>
           <div className="mt-4 space-y-3 text-sm text-text-secondary">
-            <p>Safe AppSec mode is the default for new assessments.</p>
+            <p>Human approval is required before response actions run.</p>
             <p>Request rate is capped at 30 rpm unless an admin lowers it.</p>
             <p>Evidence retention is 365 days for paid workspaces.</p>
-            <p>External host assessments require explicit scope approval.</p>
+            <p>External systems require explicit scope approval.</p>
           </div>
         </section>
       </div>
@@ -387,31 +384,30 @@ export function SettingsScreen() {
 
 export function LoginScreen() {
   return (
-    <div className="grid min-h-screen grid-cols-1 bg-bg bg-grid text-text-primary lg:grid-cols-2">
-      <section className="flex min-h-[48vh] flex-col justify-between border-b border-accent/10 p-6 lg:min-h-screen lg:border-b-0 lg:border-r lg:p-10">
+    <div className="grid min-h-screen grid-cols-1 bg-bg text-text-primary lg:grid-cols-2">
+      <section className="flex min-h-[48vh] flex-col justify-between border-b border-border bg-white p-6 lg:min-h-screen lg:border-b-0 lg:border-r lg:p-10">
         <div className="flex items-center gap-3">
-          <NorthwallMark size={28} className="text-accent" />
-          <span className="font-display text-xl font-semibold">Northwall</span>
+          <NorthwallLogo className="text-2xl" />
         </div>
         <div>
-          <h1 className="mt-10 max-w-xl font-display text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-            Security work needs a graph, not another scanner dump.
+          <h1 className="mt-10 max-w-xl text-4xl font-semibold leading-tight tracking-normal sm:text-5xl">
+            Agentic SOC for teams that still want control.
           </h1>
           <p className="mt-5 max-w-lg text-sm leading-6 text-text-secondary">
-            Coordinate AppSec agents, evidence, risk owners, and remediation from one approved assessment workspace.
+            Northwall gives security teams an agent crew for alert triage, investigation graphs, response plans, and owner handoff.
           </p>
         </div>
-        <p className="mt-8 text-xs text-text-muted">Owned environments only. Scope gates enforced before execution.</p>
+        <p className="mt-8 text-xs text-text-muted">Human approval stays in the loop. Scope is checked before a run starts.</p>
       </section>
       <section className="flex items-center justify-center p-6 lg:p-10">
-        <div className="w-full max-w-md rounded-xl border border-border bg-bg-surface p-8 risk-shadow">
+        <div className="w-full max-w-md rounded-md border border-border bg-bg-surface p-8 risk-shadow">
           <h2 className="font-display text-2xl font-semibold">Sign in</h2>
-          <p className="mt-2 text-sm text-text-muted">Use your workspace identity provider.</p>
+          <p className="mt-2 text-sm text-text-muted">Use your workspace account.</p>
           <div className="mt-8 space-y-3">
-            <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-white">
+            <button className="flex w-full items-center justify-center gap-2 rounded-md bg-accent px-4 py-3 text-sm font-semibold text-white">
               Continue with SSO
             </button>
-            <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 text-sm text-text-secondary">
+            <button className="flex w-full items-center justify-center gap-2 rounded-md border border-border px-4 py-3 text-sm text-text-secondary">
               Continue with email
             </button>
           </div>

@@ -1,34 +1,35 @@
+@import url("https://fonts.googleapis.com/css2?family=Google+Sans+Code:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #f8fafc;
+  --color-bg: #f6f7f4;
   --color-bg-surface: #ffffff;
-  --color-bg-elevated: #f1f5f9;
-  --color-bg-hover: #e2e8f0;
-  --color-border: #dbe3ef;
-  --color-border-focus: #0d9488;
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-muted: #7c8aa0;
-  --color-accent: #0d9488;
-  --color-accent-hover: #0f766e;
-  --color-success: #22c55e;
-  --color-warning: #fbbf24;
-  --color-error: #ff476f;
-  --color-info: #22d3ee;
+  --color-bg-elevated: #f1f3ef;
+  --color-bg-hover: #e6ebe4;
+  --color-border: #d9ded7;
+  --color-border-focus: #051914;
+  --color-text-primary: #051914;
+  --color-text-secondary: #31413b;
+  --color-text-muted: #77827d;
+  --color-accent: #051914;
+  --color-accent-hover: #102a22;
+  --color-success: #0b7f56;
+  --color-warning: #b7791f;
+  --color-error: #b42318;
+  --color-info: #315e80;
 
-  --color-mode-structured: #00e5a8;
-  --color-mode-iterative: #22d3ee;
-  --color-mode-exploratory: #fbbf24;
-  --color-mode-creative: #ff476f;
-  --color-mode-reflective: #a78bfa;
+  --color-mode-structured: #0b7f56;
+  --color-mode-iterative: #315e80;
+  --color-mode-exploratory: #b7791f;
+  --color-mode-creative: #b42318;
+  --color-mode-reflective: #5f4b8b;
 
   --color-node-idle: #60766f;
-  --color-node-working: #00e5a8;
-  --color-node-completed: #22d3ee;
-  --color-node-error: #ff476f;
+  --color-node-working: #0b7f56;
+  --color-node-completed: #315e80;
+  --color-node-error: #b42318;
   --color-edge-default: #1f3330;
-  --color-edge-active: #00e5a8;
+  --color-edge-active: #051914;
 }
 
 body {
@@ -38,18 +39,26 @@ body {
 }
 
 .font-display {
-  font-family: var(--font-display), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-family: "Google Sans Code", var(--font-display), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.brand-wordmark {
+  color: inherit;
+  font-family: "Google Sans Code", var(--font-display), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.4;
 }
 
 .bg-grid {
   background-image:
-    linear-gradient(rgba(15, 23, 42, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(15, 23, 42, 0.025) 1px, transparent 1px);
+    linear-gradient(rgba(5, 25, 20, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(5, 25, 20, 0.035) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 
 .risk-shadow {
-  box-shadow: 0 0 0 1px rgba(13, 148, 136, 0.12), 0 18px 50px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 0 0 1px rgba(5, 25, 20, 0.08), 0 18px 50px rgba(5, 25, 20, 0.08);
 }
 
 nextjs-portal {
@@ -62,16 +71,16 @@ nextjs-portal {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f8fafc;
+  background: #f6f7f4;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #c9d0ca;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #9aa69e;
 }
 
 /* Landing page animations */

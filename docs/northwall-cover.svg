@@ -1,23 +1,18 @@
 <svg width="1500" height="500" viewBox="0 0 1500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1500" height="500" fill="#050707"/>
-  <path d="M0 0h1500v500H0z" fill="url(#grid)"/>
-  <circle cx="1165" cy="220" r="220" fill="#00E5A8" fill-opacity="0.08"/>
-  <circle cx="1135" cy="250" r="130" fill="#22D3EE" fill-opacity="0.08"/>
-  <g transform="translate(1040 130)">
-    <path d="M110 0l110 42v90c0 72-44 132-110 174C44 264 0 204 0 132V42L110 0z" stroke="#00E5A8" stroke-width="10" stroke-linejoin="round"/>
-    <path d="M54 170l56-64 56 64" stroke="#00E5A8" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M66 94h88M110 106v92" stroke="#22D3EE" stroke-width="10" stroke-linecap="round"/>
-    <circle cx="54" cy="170" r="14" fill="#00E5A8"/>
-    <circle cx="110" cy="106" r="14" fill="#22D3EE"/>
-    <circle cx="166" cy="170" r="14" fill="#00E5A8"/>
+  <rect width="1500" height="500" fill="#051914"/>
+  <rect x="72" y="54" width="358" height="392" fill="#FFFFFF" fill-opacity="0.035"/>
+  <text x="74" y="244" fill="#FFFFFF" font-family="'Google Sans Code', 'IBM Plex Mono', monospace" font-size="92" font-weight="500" letter-spacing="0">Northwall</text>
+  <text x="78" y="315" fill="#FFFFFF" fill-opacity="0.68" font-family="'Google Sans Code', 'IBM Plex Mono', monospace" font-size="28" font-weight="400" letter-spacing="0">Repo security reviews that end in GitHub issues.</text>
+  <line x1="78" y1="352" x2="710" y2="352" stroke="#FFFFFF" stroke-opacity="0.2"/>
+  <text x="78" y="394" fill="#FFFFFF" fill-opacity="0.48" font-family="'Google Sans Code', 'IBM Plex Mono', monospace" font-size="20" font-weight="400" letter-spacing="0">Connect GitHub -> map the code -> approve the plan -> run safe checks -> create issues</text>
+  <g transform="translate(1130 150)" opacity="0.9">
+    <rect x="0" y="0" width="210" height="48" rx="6" fill="#FFFFFF" fill-opacity="0.09"/>
+    <rect x="0" y="74" width="160" height="48" rx="6" fill="#FFFFFF" fill-opacity="0.09"/>
+    <rect x="0" y="148" width="196" height="48" rx="6" fill="#FFFFFF" fill-opacity="0.09"/>
+    <circle cx="-42" cy="24" r="11" fill="#FFFFFF" fill-opacity="0.55"/>
+    <circle cx="-42" cy="98" r="11" fill="#FFFFFF" fill-opacity="0.38"/>
+    <circle cx="-42" cy="172" r="11" fill="#FFFFFF" fill-opacity="0.55"/>
+    <path d="M-31 24H0M-31 98H0M-31 172H0" stroke="#FFFFFF" stroke-opacity="0.32" stroke-width="2"/>
+    <path d="M-42 35V87M-42 109V161" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="2"/>
   </g>
-  <text x="110" y="190" fill="#ECFFF8" font-family="Inter, Arial, sans-serif" font-size="86" font-weight="800">Northwall</text>
-  <text x="114" y="252" fill="#00E5A8" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="5">MULTI-AGENT APPSEC ORCHESTRATION</text>
-  <text x="112" y="320" fill="#9EB7B0" font-family="Inter, Arial, sans-serif" font-size="30">Map the system. Plan the assessment. Fix the risk.</text>
-  <text x="114" y="374" fill="#60766F" font-family="Inter, Arial, sans-serif" font-size="20">System graph + expert agents + evidence-backed remediation</text>
-  <defs>
-    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
-      <path d="M32 0H0v32" stroke="#00E5A8" stroke-opacity="0.08"/>
-    </pattern>
-  </defs>
 </svg>
