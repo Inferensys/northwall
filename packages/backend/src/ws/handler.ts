@@ -36,7 +36,7 @@ async function verifyToken(token: string): Promise<string | null> {
  */
 export function setupWebSocket(
   io: SocketServer,
-  missionManager: MissionManager,
+  missionManager?: MissionManager,
   assessmentManager?: AssessmentManager,
 ): void {
   // Authenticate socket connections
@@ -70,6 +70,11 @@ export function setupWebSocket(
 
     // Join a mission room (supports both new and legacy event names)
     const handleJoin = (missionId: string) => {
+      if (!missionManager) {
+        socket.emit("error", { message: "Mission runtime is not enabled" });
+        return;
+      }
+
       // Verify mission ownership
       const missionUserId = missionManager.getMissionUserId(missionId);
       if (missionUserId && missionUserId !== userId) {
@@ -190,10 +195,14 @@ export function setupWebSocket(
     socket.on(
       "send_message",
       async (data: { sessionId?: string; missionId?: string; content: string }) => {
-        const id = data.missionId ?? data.sessionId;
-        if (!id) return;
+      const id = data.missionId ?? data.sessionId;
+      if (!id) return;
+      if (!missionManager) {
+        socket.emit("error", { message: "Mission runtime is not enabled" });
+        return;
+      }
 
-        // Verify ownership
+      // Verify ownership
         const missionUserId = missionManager.getMissionUserId(id);
         if (missionUserId && missionUserId !== userId) {
           socket.emit("error", { message: "Forbidden" });
@@ -219,10 +228,14 @@ export function setupWebSocket(
     socket.on(
       "credential_provided",
       async (data: { missionId: string; requestId: string; credentials: Record<string, string> }) => {
-        const id = data.missionId;
-        if (!id) return;
+      const id = data.missionId;
+      if (!id) return;
+      if (!missionManager) {
+        socket.emit("error", { message: "Mission runtime is not enabled" });
+        return;
+      }
 
-        // Verify ownership
+      // Verify ownership
         const missionUserId = missionManager.getMissionUserId(id);
         if (missionUserId && missionUserId !== userId) {
           socket.emit("error", { message: "Forbidden" });

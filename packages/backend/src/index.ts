@@ -45,16 +45,18 @@ app.use(
 app.get("/health", (c) => c.json({ status: "ok", timestamp: Date.now() }));
 
 // Initialize services
-const missionManager = await MissionManager.create();
+const missionManager = process.env.ENABLE_LEGACY_MISSIONS === "true"
+  ? await MissionManager.create()
+  : null;
 const assessmentManager = await AssessmentManager.create();
 
 // Auth middleware for product API routes
-app.use("/api/missions/*", authMiddleware);
+if (missionManager) app.use("/api/missions/*", authMiddleware);
 app.use("/api/github/*", authMiddleware);
 app.use("/api/assessments/*", authMiddleware);
 
 // Mount routes
-app.route("/api/missions", missionsRouter(missionManager));
+if (missionManager) app.route("/api/missions", missionsRouter(missionManager));
 app.route("/api/github", githubRouter(assessmentManager));
 app.route("/api/assessments", assessmentsRouter(assessmentManager));
 
@@ -73,6 +75,6 @@ const io = new SocketServer(server, {
   },
 });
 
-setupWebSocket(io, missionManager, assessmentManager);
+setupWebSocket(io, missionManager ?? undefined, assessmentManager);
 
 console.log("WebSocket server ready");
