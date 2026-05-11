@@ -11,7 +11,7 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Dev-mode bypass: return a fake user immediately
+    // Dev-mode bypass: return a local user immediately
     if (DEV_BYPASS) {
       setUser({
         id: "dev-user-001",

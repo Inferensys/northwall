@@ -31,7 +31,7 @@ describe("AppSec scope gate", () => {
     });
     expect(result.allowed).toBe(false);
     expect(result.reasons).toContain("Third-party targets are outside scope.");
-    expect(result.reasons).toContain("Destructive testing is disabled for safe AppSec runs.");
+    expect(result.reasons).toContain("Destructive testing is disabled for safe SOC runs.");
   });
 
   it("requires allowed hosts for staging URL assessments", () => {
@@ -41,7 +41,7 @@ describe("AppSec scope gate", () => {
       allowedHosts: [],
     });
     expect(result.allowed).toBe(false);
-    expect(result.reasons).toContain("Staging URL assessments require at least one allowed host.");
+    expect(result.reasons).toContain("Staging URL runs require at least one allowed host.");
   });
 });
 

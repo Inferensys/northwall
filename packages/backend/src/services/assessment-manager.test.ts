@@ -33,7 +33,7 @@ describe("AssessmentManager workflow gates", () => {
     const manager = new AssessmentManager();
     const assessment = await manager.createAssessment("user-1", repo, "main");
 
-    await expect(manager.plan(assessment.id, "user-1")).rejects.toThrow("Run understanding before planning.");
+    await expect(manager.plan(assessment.id, "user-1")).rejects.toThrow("Build context before planning.");
   });
 
   it("rejects execution before plan approval", async () => {

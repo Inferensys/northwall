@@ -1,45 +1,64 @@
 ![Northwall cover](docs/northwall-cover.svg)
 
-Security operations teams don't need another alert queue.
+SOC teams don't need another alert queue.
 
-Northwall is an Agentic SOC platform. It brings specialist agents into the work analysts already do: alert triage, threat investigation, investigation graphs, response planning, and owner handoff.
+Northwall is an Agentic SOC product for teams that want agents to do the connective work: pull source context, map ownership, build an investigation graph, draft a response plan, and turn approved findings into GitHub issues.
 
-The point is not to replace the SOC analyst. The point is to stop making analysts copy evidence between CrowdStrike, Microsoft Sentinel, GitHub, Snyk, Semgrep, Jira, and Slack just to answer the same 5 questions.
+The analyst still makes the call. Northwall makes the work visible.
 
-What happened? Is it real? What systems are touched? Who owns the fix? What should we do next?
+It is built for the messy middle between tools like CrowdStrike, Microsoft Sentinel, GitHub, Snyk, Semgrep, Jira, and Slack. The product starts with GitHub because code, owners, dependencies, CI, and work items are where a lot of response work actually ends up.
 
-Northwall turns that into a controlled multi-agent run.
+Northwall fits the searches buyers are already making: agentic SOC, multi-agent security operations, SOC automation, alert triage, threat investigation, incident response automation, investigation graph, security work item creation, and human-in-the-loop security operations.
 
-## What Northwall Is
+## Demo
 
-Northwall is an agentic SOC product for multi-agent security operations. It shows how a security operations center can use AI agents for alert triage, threat investigation, incident context building, response planning, and remediation handoff while keeping analysts in control.
+[Watch the 15-second walkthrough](docs/northwall-agentic-soc-demo.mp4)
 
-It is not a chatbot bolted onto a SIEM. It is a workflow layer for SOC automation where every agent has a job, every action is visible, and every finding has evidence attached.
+<video src="docs/northwall-agentic-soc-demo.mp4" controls width="100%"></video>
 
-This is the category EY is pointing at with [Agentic SOC](https://www.ey.com/en_in/insights/ai/agentic-soc-multi-agent-orchestration-for-next-gen-security-operations): defenders moving from alert handling to supervising agent teams that can reason across the environment. Northwall shows that pattern in product form, starting with GitHub context and work-item creation.
+### Connect a source
 
-Useful market terms, written plainly: agentic SOC, multi-agent security operations, SOC automation, alert triage, threat investigation, incident response, investigation graph, response plan, human-in-the-loop security, SIEM, EDR, cloud security, identity security, GitHub security, Jira security workflows.
+Pick a GitHub repo and branch. Northwall keeps provider tokens server-side.
+
+![Northwall source selection](docs/screenshots/soc-source-selection.png)
+
+### Review the agent plan
+
+Northwall builds source context first, then shows the investigation graph, agent team, task order, and approval notes before anything runs.
+
+![Northwall agent plan](docs/screenshots/agent-plan.png)
+
+### Watch the run
+
+The run log shows what agents are doing, which findings were created, and what evidence was used.
+
+![Northwall live SOC run](docs/screenshots/live-soc-run.png)
+
+### Send work to owners
+
+Findings are selected by the analyst, previewed as GitHub issues, and sent only after approval.
+
+![Northwall findings handoff](docs/screenshots/findings-handoff.png)
+
+### Mobile sign-in
+
+![Northwall mobile login](docs/screenshots/login-mobile.png)
 
 ## Core Flow
 
 ```text
-Connect source -> Build context -> Review agent plan -> Run investigation -> Approve handoff -> Create work items
+Connect source -> Build context -> Review plan -> Approve run -> Review findings -> Create GitHub issues
 ```
 
-- GitHub OAuth as the first source and remediation connector
-- Source repository, branch, package, route, auth, config, and CI context
-- Investigation graph across alerts, services, owners, code paths, and work items
-- Agent task map before the run starts
-- Human approval gate before response actions
+- GitHub OAuth for repo context and issue creation
+- Repo, branch, package, route, auth, config, and CI inventory
+- Investigation graph across services, routes, owners, dependencies, and work items
+- Specialist agents with named responsibilities before the run starts
+- Human approval before response actions
 - Live Socket.IO event stream while agents work
-- Findings with severity, confidence, evidence, owner, response step, issue body, and labels
-- GitHub work item creation only after the user selects findings
+- Findings with severity, confidence, evidence, owner notes, issue body, and labels
 
-The GitHub path is the first slice. The product direction is broader: SIEM, EDR, cloud, identity, source control, ticketing, and evidence storage.
-
-## Product
-
-![GitHub workflow](docs/screenshots/.qa-northwall-plan.png)
+GitHub is the first connector. The same pattern can extend to SIEM, EDR, cloud, identity, ticketing, and evidence storage.
 
 ## How It Works
 
@@ -47,12 +66,12 @@ The backend keeps source and model credentials server-side.
 
 When a user connects GitHub, Northwall stores the provider token through encrypted local persistence keyed by `TOKEN_ENCRYPTION_KEY`. The frontend only sees connection metadata: account, scopes, and connection time.
 
-When a run starts, the backend reads the selected repo through the GitHub API. Today it inventories files that usually matter during a security investigation:
+When a run starts, the backend reads the selected repo through the GitHub API and inventories the files that usually matter during response:
 
 - package manifests and lockfiles
 - API routes and handlers
 - auth, session, tenant, middleware, and permission files
-- environment/config files
+- environment and config files
 - GitHub Actions and CI files
 - service ownership and work item context
 
@@ -62,11 +81,11 @@ OpenAI GPT-5.5 runs on the backend. It turns the source inventory into an agent 
 
 | Package | Role |
 | --- | --- |
-| `@northwall/frontend` | Next.js app shell, source picker, investigation graph, plan approval, live SOC run, findings table |
-| `@northwall/backend` | Hono API, GitHub integration, investigation worker, OpenAI planning, Socket.IO events |
-| `@northwall/shared` | Zod schemas for sources, runs, graphs, plans, findings, and work item payloads |
-| `@northwall/agent-runtime` | Existing agent runtime kept for future worker expansion |
-| `@northwall/agent-control` | Existing sandbox control service kept for deeper runtime checks |
+| `@northwall/frontend` | Next.js app, source picker, investigation graph, plan approval, live run, findings table |
+| `@northwall/backend` | Hono API, GitHub integration, assessment worker, OpenAI planning, Socket.IO events |
+| `@northwall/shared` | Zod schemas for repos, runs, graphs, plans, findings, and issue payloads |
+| `@northwall/agent-runtime` | Agent runtime kept for deeper worker expansion |
+| `@northwall/agent-control` | Sandbox control service kept for future runtime checks |
 
 ## Stack
 
@@ -144,7 +163,7 @@ Required environment:
 | `OPENAI_API_KEY` | Backend-only model key |
 | `OPENAI_MODEL` | Defaults to `gpt-5.5` |
 
-## SOC Safety Boundaries
+## Safety Boundaries
 
 Northwall is for owned systems and authorized security operations work.
 
@@ -156,6 +175,6 @@ The output is plain: what happened, why it matters, what evidence supports it, w
 
 We build products like this for teams that want agentic security operations without turning the SOC into a black box.
 
-![Northwall cover](docs/inferensys.svg)
+![Inferensys](docs/inferensys.svg)
 
 Talk to [Inferensys](https://inferensys.com/) or contact us at [inferensys.com/contact](https://inferensys.com/contact).

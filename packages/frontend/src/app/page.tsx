@@ -74,7 +74,7 @@ function Panel({
   className?: string;
 }) {
   return (
-    <section className={cn("rounded-md border border-border bg-bg-surface", className)}>
+    <section className={cn("min-w-0 rounded-md border border-border bg-bg-surface", className)}>
       <div className="flex h-12 items-center gap-2 border-b border-border px-4">
         {Icon && <Icon className="h-4 w-4 text-text-muted" />}
         <h2 className="text-sm font-semibold text-text-primary">{title}</h2>
@@ -457,7 +457,7 @@ export default function Home() {
             </Panel>
           </div>
 
-          <div className="mt-4 grid gap-4 xl:grid-cols-[1fr_420px]">
+          <div className="mt-4 grid gap-4 2xl:grid-cols-[minmax(0,1fr)_420px]">
             <Panel title="Findings and work items" icon={GitPullRequest}>
               <FindingsTable
                 findings={assessment?.findings ?? []}
@@ -642,7 +642,7 @@ function FindingsTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[1020px] text-left text-sm">
+      <table className="w-full min-w-[820px] text-left text-sm">
         <thead className="border-b border-border bg-bg-elevated text-xs font-semibold uppercase tracking-wide text-text-muted">
           <tr>
             <th className="w-10 px-4 py-3" />
