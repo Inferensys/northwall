@@ -344,7 +344,7 @@ export class MissionManager {
     const activities = [
       { summary: "Confirmed owned application scope and safe AppSec limits", tool: "Read" },
       { summary: "Mapped target routes, auth boundaries, packages, and data stores", tool: "Task" },
-      { summary: "Prepared an agent assessment strategy with evidence requirements", tool: "Plan" },
+      { summary: "Prepared an agent mission strategy with evidence requirements", tool: "Plan" },
     ];
     for (const activity of activities) {
       const event: SessionEvent = {
@@ -361,7 +361,7 @@ export class MissionManager {
     }
 
     const text =
-      "I have enough context to plan this as an authorized AppSec assessment. I would map the system first, form a specialist security team, run safe code and dependency checks, verify only approved local routes, and turn high-confidence evidence into a remediation queue.";
+      "I have enough context to plan this as an authorized AppSec mission. I would map the graph first, form a specialist security team, run safe code and dependency checks, verify only approved local routes, and turn high-confidence evidence into owner handoffs.";
     const assistant: ChatMessage = {
       id: `msg-${nanoid(8)}`,
       sessionId: id,
@@ -475,7 +475,7 @@ export class MissionManager {
       const d = this.missions.get(id);
       if (!d) return;
       d.containerStatus = "running";
-      d.vncUrl = createDesktopPreviewUrl("Agent desktop live", "Assessment cockpit and local target app running at localhost:3000");
+      d.vncUrl = createDesktopPreviewUrl("Agent desktop live", "AppSec mission cockpit and local target app running at localhost:3000");
       this.emitEvent(id, "container_running", "Agent VM ready", { vncUrl: d.vncUrl });
       this.runSampleExecution(id);
     }, 900);
@@ -517,12 +517,12 @@ export class MissionManager {
     await fs.mkdir(path.join(workspace, "docs"), { recursive: true });
     await fs.writeFile(
       path.join(workspace, "README.md"),
-      `# AcmePay AppSec Assessment\n\nAssessment prompt:\n\n${prompt}\n\n## Delivered\n\n- System graph of routes, auth boundaries, dependencies, and data stores\n- Prioritized findings with evidence, owners, and verification steps\n- Safe local probe notes\n- Remediation handoff for engineering review\n`,
+      `# AcmePay AppSec Mission\n\nMission prompt:\n\n${prompt}\n\n## Delivered\n\n- AppSec graph of routes, auth boundaries, dependencies, and data stores\n- Prioritized owner handoffs with evidence, owners, and verification steps\n- Safe local probe notes\n- Remediation handoff for engineering review\n`,
       "utf-8",
     );
     await fs.writeFile(
-      path.join(workspace, "src", "components", "AssessmentCockpit.tsx"),
-      `export function AssessmentCockpit() {\n  return <main>Northwall assessment cockpit with findings, graph, and remediation queue</main>;\n}\n`,
+      path.join(workspace, "src", "components", "MissionCockpit.tsx"),
+      `export function MissionCockpit() {\n  return <main>Northwall AppSec mission cockpit with handoffs, graph, and remediation queue</main>;\n}\n`,
       "utf-8",
     );
     await fs.writeFile(
@@ -541,8 +541,8 @@ export class MissionManager {
       () => this.updateAgent(id, "auth-analyst", "working", "Reviewing session, tenant, and role boundaries"),
       () => this.completeTask(id, "t3", "auth-analyst", "Verified tenant export finding with safe local fixtures"),
       () => this.updateAgent(id, "runtime-verifier", "working", "Running approved local probes under scope rate limit"),
-      () => this.completeTask(id, "t4", "runtime-verifier", "Attached runtime evidence to webhook and session findings"),
-      () => this.updateAgent(id, "risk-reviewer", "working", "Ranking findings and writing remediation handoff"),
+      () => this.completeTask(id, "t4", "runtime-verifier", "Attached runtime evidence to webhook and session handoffs"),
+      () => this.updateAgent(id, "risk-reviewer", "working", "Ranking handoffs and writing remediation guidance"),
       () => this.completeTask(id, "t5", "risk-reviewer", "Prepared owner-ready remediation queue and verification steps"),
       () => this.finishSampleMission(id),
     ];
@@ -602,12 +602,12 @@ export class MissionManager {
     data.status = "completed";
     data.completedAt = Date.now();
     data.containerStatus = "running";
-    data.vncUrl = createDesktopPreviewUrl("Assessment completed", "Findings, evidence, and remediation notes are ready.");
+    data.vncUrl = createDesktopPreviewUrl("Mission completed", "Owner handoffs, evidence, and remediation notes are ready.");
     data.agents = data.agents.map((agent) => ({ ...agent, status: "completed", currentAction: null }));
-    this.emitEvent(id, "agent_message", "Delivered system graph, evidence-backed findings, and remediation handoff.", {
-      text: "Delivered system graph, evidence-backed findings, and remediation handoff.",
+    this.emitEvent(id, "agent_message", "Delivered AppSec graph, evidence-backed handoffs, and remediation guidance.", {
+      text: "Delivered AppSec graph, evidence-backed handoffs, and remediation guidance.",
     }, "orchestrator");
-    this.emitEvent(id, "session_completed", "Assessment completed");
+    this.emitEvent(id, "session_completed", "Mission completed");
     this.saveMission(id, true).catch((err) => console.error(`Save failed ${id}:`, err));
   }
 
@@ -960,9 +960,9 @@ function createPortfolioPlan(): MissionPlan {
   const now = Date.now();
   return {
     id: `plan-${nanoid(8)}`,
-    title: "AcmePay AppSec Assessment",
+    title: "AcmePay AppSec Mission",
     objective:
-      "Map the owned AcmePay SaaS application, run a safe AppSec assessment, and produce evidence-backed findings with remediation steps.",
+      "Map the owned AcmePay SaaS application, run a safe AppSec mission, and produce evidence-backed owner handoffs with remediation steps.",
     estimatedComplexity: "complex",
     createdAt: now,
     agents: [
@@ -971,7 +971,7 @@ function createPortfolioPlan(): MissionPlan {
         displayName: "System Cartographer",
         specialization: "Application graph mapping",
         description: "Maps routes, services, auth boundaries, data stores, packages, and integrations.",
-        prompt: "Create a system graph first. Identify trust boundaries and risky paths. Do not run destructive checks.",
+        prompt: "Create an AppSec graph first. Identify trust boundaries and risky paths. Do not run destructive checks.",
         tools: ["Read", "Glob", "Grep", "Write"],
         model: "sonnet",
       },
@@ -998,7 +998,7 @@ function createPortfolioPlan(): MissionPlan {
         displayName: "Runtime Verifier",
         specialization: "Safe local verification",
         description: "Runs approved local probes against in-scope routes and records runtime evidence.",
-        prompt: "Verify findings only against approved local targets under rate limits. Stop before side effects.",
+        prompt: "Verify handoffs only against approved local targets under rate limits. Stop before side effects.",
         tools: ["Read", "Bash", "Write"],
         model: "sonnet",
       },
@@ -1007,7 +1007,7 @@ function createPortfolioPlan(): MissionPlan {
         displayName: "Risk Reviewer",
         specialization: "Evidence and remediation triage",
         description: "Deduplicates weak signals, ranks risk, assigns owners, and writes verification steps.",
-        prompt: "Turn evidence into a prioritized remediation queue mapped to ASVS, CWE, and owner workflows.",
+        prompt: "Turn evidence into prioritized owner handoffs mapped to ASVS, CWE, and owner workflows.",
         tools: ["Read", "Write"],
         model: "sonnet",
       },
@@ -1015,7 +1015,7 @@ function createPortfolioPlan(): MissionPlan {
     tasks: [
       {
         id: "t1",
-        title: "Map system graph",
+        title: "Map AppSec graph",
         description: "Identify routes, services, packages, secrets, data stores, auth flows, and external integrations.",
         assignee: "system-cartographer",
         dependencies: [],
@@ -1047,8 +1047,8 @@ function createPortfolioPlan(): MissionPlan {
       },
       {
         id: "t5",
-        title: "Prioritize remediation queue",
-        description: "Deduplicate findings, map evidence to ASVS/CWE, assign owners, and write verification steps.",
+        title: "Prioritize owner handoffs",
+        description: "Deduplicate handoffs, map evidence to ASVS/CWE, assign owners, and write verification steps.",
         assignee: "risk-reviewer",
         dependencies: ["t3", "t4"],
         status: "pending",
@@ -1088,14 +1088,14 @@ function createDesktopPreviewUrl(title: string, subtitle: string): string {
         <p>${escapeHtml(subtitle)}</p>
         <div class="metric">
           <div class="card"><p>Graph confidence</p><div class="value">94%</div></div>
-          <div class="card"><p>Findings</p><div class="value">4</div></div>
+          <div class="card"><p>Handoffs</p><div class="value">4</div></div>
           <div class="card"><p>High confidence</p><div class="value">3</div></div>
           <div class="card"><p>Owners</p><div class="value">4</div></div>
         </div>
       </section>
       <section>
-        <h1>Live Assessment Preview</h1>
-        <p><code>npm run dev</code> completed. Findings, graph, and remediation queue are visible for review.</p>
+        <h1>Live Mission Preview</h1>
+        <p><code>npm run dev</code> completed. Handoffs, graph, and remediation queue are visible for review.</p>
         <div class="chart"></div>
       </section>
     </main>

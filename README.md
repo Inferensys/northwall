@@ -1,17 +1,50 @@
 ![Northwall cover](docs/northwall-cover.svg)
 
-Northwall is an Agentic SOC platform for teams that want multi-agent orchestration using graph-based understanding: custom team of multi-agent specialists, build a knowledge graph, vulnerability analysis & search loops, and GitHub integration.
+# Run AppSec missions with specialist AI agents
 
-If you're looking to build a custom agentic SOC tool / platform for your organization, Northwall would be a good fit to start from; whether it is: 
-- Multi Agent Orchestration,
-- Agentic security operations,
-- SOC automation,
-- Alert triage,
-- Vulnerability / threat investigation,
-- Incident response automation,
-- Investigation graph,
-- Security work item creation, or
-- Human-in-the-loop (HITL) security operations.
+Northwall orchestrates specialist AI agents across code, ownership, dependencies, and security context to turn AppSec risk into approved, owner-ready action.
+
+Most security tools hand leaders another queue. Scanners produce alerts, code review bots produce comments, and engineers still have to answer the hard operational questions: what is reachable, which owner should act, what evidence is strong enough, and what should the remediation work actually say?
+
+Northwall is an Agentic AppSec Orchestration product. It builds an application knowledge graph first, dispatches a governed team of security agents, runs safe parallel investigation loops, and keeps humans in control before work is sent to owners.
+
+GitHub is the first execution surface: source context, branch selection, code ownership, dependency evidence, and GitHub issue handoff. The same orchestration pattern is designed to extend to SIEM, EDR, cloud, identity, ticketing, and evidence storage without claiming those connectors as the default path today.
+
+## Core Flow
+
+```text
+Connect evidence source -> Build graph -> Approve agent mission -> Run parallel specialists -> Send owner handoffs
+```
+
+- GitHub OAuth for source context and approved remediation handoff
+- Repo, branch, package, route, auth, config, ownership, and CI inventory
+- AppSec knowledge graph across services, routes, owners, dependencies, controls, and work items
+- Specialist agents with named responsibilities before execution starts
+- Parallel MoE-style investigation across auth, dependency, ownership, config, CI, and threat context
+- Human approval before the mission runs and before work is sent to owners
+- Live Socket.IO event stream while agents execute
+- Owner handoffs with severity, confidence, evidence, remediation, verification notes, issue body, and labels
+
+## Why Northwall
+
+| Alternative | What it gives you | What Northwall adds |
+| --- | --- | --- |
+| Scanners | Findings, alerts, and severity queues | Governed agentic execution that turns evidence into owner-ready action |
+| AI code review bots | Comments on code changes | Application graph context, specialist agents, and approval-gated remediation handoff |
+| Manual AppSec triage | Expert judgment, but limited throughput | Parallel specialists that map, triage, verify, and draft work while analysts stay in control |
+
+## Agent Team
+
+Northwall plans the mission before execution so reviewers can see the team, task order, evidence goals, and approval notes.
+
+| Agent | Responsibility |
+| --- | --- |
+| System Cartographer | Builds the AppSec knowledge graph across repos, routes, packages, owners, controls, and CI. |
+| Auth Boundary Agent | Reviews auth, session, tenant, middleware, and permission-sensitive paths. |
+| Dependency Analyst | Checks package manifests, lockfiles, dependency exposure, and release risk. |
+| CI/Config Analyst | Reviews pipeline, runtime configuration, environment references, and guardrails. |
+| Response Handoff Agent | Converts evidence into owner-ready remediation work with verification steps. |
+| Human Review Agent | Keeps scope, approval, and risky actions behind explicit analyst control. |
 
 ## Demo
 
@@ -21,49 +54,33 @@ If you're looking to build a custom agentic SOC tool / platform for your organiz
 
 <video src="docs/northwall-agentic-soc-demo.mp4" controls width="100%"></video>
 
-### Connect a source
+### Connect an evidence source
 
 Pick a GitHub repo and branch. Northwall keeps provider tokens server-side.
 
 ![Northwall source selection](docs/screenshots/soc-source-selection.png)
 
-### Review the agent plan
+### Approve the agent plan
 
-Northwall builds source context first, then shows the investigation graph, agent team, task order, and approval notes before anything runs.
+Northwall builds AppSec graph context first, then shows the agent team, task order, evidence goals, and approval notes before anything runs.
 
 ![Northwall agent plan](docs/screenshots/agent-plan.png)
 
-### Watch the run
+### Watch the mission run
 
-The run log shows what agents are doing, which findings were created, and what evidence was used.
+The run log shows which specialist agents are executing, which evidence was used, and which owner handoffs were drafted.
 
-![Northwall live SOC run](docs/screenshots/live-soc-run.png)
+![Northwall live AppSec mission](docs/screenshots/live-soc-run.png)
 
 ### Send work to owners
 
-Findings are selected by the analyst, previewed as GitHub issues, and sent only after approval.
+Handoffs are selected by the analyst, previewed as GitHub issues, and sent only after approval.
 
-![Northwall findings handoff](docs/screenshots/findings-handoff.png)
+![Northwall owner handoff](docs/screenshots/findings-handoff.png)
 
 ### Mobile sign-in
 
 ![Northwall mobile login](docs/screenshots/login-mobile.png)
-
-## Core Flow
-
-```text
-Connect source -> Build context -> Review plan -> Approve run -> Review findings -> Create GitHub issues
-```
-
-- GitHub OAuth for repo context and issue creation
-- Repo, branch, package, route, auth, config, and CI inventory
-- Investigation graph across services, routes, owners, dependencies, and work items
-- Specialist agents with named responsibilities before the run starts
-- Human approval before response actions
-- Live Socket.IO event stream while agents work
-- Findings with severity, confidence, evidence, owner notes, issue body, and labels
-
-GitHub is the first connector. The same pattern can extend to SIEM, EDR, cloud, identity, ticketing, and evidence storage.
 
 ## How It Works
 
@@ -71,7 +88,7 @@ The backend keeps source and model credentials server-side.
 
 When a user connects GitHub, Northwall stores the provider token through encrypted local persistence keyed by `TOKEN_ENCRYPTION_KEY`. The frontend only sees connection metadata: account, scopes, and connection time.
 
-When a run starts, the backend reads the selected repo through the GitHub API and inventories the files that usually matter during response:
+When a mission starts, the backend reads the selected repo through the GitHub API and inventories the files that usually matter during AppSec operations:
 
 - package manifests and lockfiles
 - API routes and handlers
@@ -80,15 +97,15 @@ When a run starts, the backend reads the selected repo through the GitHub API an
 - GitHub Actions and CI files
 - service ownership and work item context
 
-OpenAI GPT-5.5 runs on the backend. It turns the source inventory into an agent plan and owner handoff drafts. The prompts stay defensive: owned systems, concrete evidence, no third-party targets, no destructive actions, no exploit payloads.
+OpenAI GPT-5.5 runs on the backend. It turns the source inventory and AppSec graph into an agent plan and owner handoff drafts. The prompts stay defensive: owned systems, static/dependency analysis, concrete evidence, no third-party targets, no destructive actions, no exploit payloads.
 
 ## Packages
 
 | Package | Role |
 | --- | --- |
-| `@northwall/frontend` | Next.js app, source picker, investigation graph, plan approval, live run, findings table |
-| `@northwall/backend` | Hono API, GitHub integration, assessment worker, OpenAI planning, Socket.IO events |
-| `@northwall/shared` | Zod schemas for repos, runs, graphs, plans, findings, and issue payloads |
+| `@northwall/frontend` | Next.js app, source picker, AppSec graph, agent plan approval, live mission, owner handoff table |
+| `@northwall/backend` | Hono API, GitHub integration, mission worker, OpenAI planning, Socket.IO events |
+| `@northwall/shared` | Zod schemas for repos, runs, graphs, plans, handoffs, and issue payloads |
 | `@northwall/agent-runtime` | Agent runtime kept for deeper worker expansion |
 | `@northwall/agent-control` | Sandbox control service kept for future runtime checks |
 
@@ -171,15 +188,15 @@ Required environment:
 
 ## Safety Boundaries
 
-Northwall is for owned systems and authorized security operations work.
+Northwall is for owned systems and authorized AppSec work.
 
-It starts with safe triage, static context, dependency context, and owner handoff. It does not run third-party scanning, destructive tests, credential collection, persistence checks, or weaponized exploit output.
+It starts with safe source context, dependency context, graph building, agent planning, and owner handoff. It does not run third-party scanning, destructive tests, credential collection, persistence checks, or weaponized exploit output.
 
-The output is plain: what happened, why it matters, what evidence supports it, who owns it, and what work item should be created.
+The output is plain: what was found, why it matters, what evidence supports it, who owns it, and what work should be created.
 
 ## Work With Us
 
-We build products like this for teams that want agentic security operations without turning the SOC into a black box.
+We build products like this for teams that want agentic AppSec execution without turning remediation work into a black box.
 
 ![Inferensys](docs/inferensys.svg)
 

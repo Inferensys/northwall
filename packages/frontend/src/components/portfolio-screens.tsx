@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 import { evidenceTimeline, findings, systemGraph } from "@/lib/northwall-demo";
 
 const nav = [
-  { href: "/", label: "SOC Run" },
+  { href: "/", label: "AppSec Mission" },
   { href: "/admin", label: "Admin" },
   { href: "/team", label: "Team" },
   { href: "/integrations", label: "Integrations" },
@@ -65,8 +65,8 @@ export function PortfolioShell({
         </nav>
         <div className="absolute bottom-0 left-0 right-0 border-t border-accent/10 p-4">
           <div className="rounded-md border border-white/10 bg-white/[0.06] p-3">
-            <p className="text-xs font-medium text-white">Agentic SOC</p>
-            <p className="mt-1 text-[11px] leading-5 text-white/55">Triage, investigation, response, and owner handoff in one run.</p>
+            <p className="text-xs font-medium text-white">Agentic AppSec</p>
+            <p className="mt-1 text-[11px] leading-5 text-white/55">Graph context, parallel agents, approval, and owner handoff in one mission.</p>
           </div>
         </div>
       </aside>
@@ -126,23 +126,23 @@ export function StatCard({
 
 export function AdminScreen() {
   const rows = [
-    ["AcmePay identity incident", "Running", "7 agents", "4 findings", "2m ago"],
-    ["Customer Portal alert cluster", "Review", "5 agents", "3 findings", "18m ago"],
-    ["Payments webhook case", "Responding", "4 agents", "2 findings", "41m ago"],
-    ["CI dependency signal", "Verified", "3 agents", "1 finding", "2h ago"],
+    ["AcmePay auth boundary mission", "Running", "7 agents", "4 handoffs", "2m ago"],
+    ["Customer Portal graph review", "Review", "5 agents", "3 handoffs", "18m ago"],
+    ["Payments webhook ownership", "Handoff", "4 agents", "2 handoffs", "41m ago"],
+    ["CI dependency exposure", "Verified", "3 agents", "1 handoff", "2h ago"],
   ];
 
   return (
     <PortfolioShell active="Admin">
       <PageHeader
         title="Admin Console"
-        description="SOC runs, agent actions, open risk, and owner handoff in one place."
+        description="AppSec missions, agent actions, graph context, open risk, and owner handoff in one place."
         action="Invite Analyst"
       />
       <div className="space-y-6 p-8">
         <div className="grid grid-cols-4 gap-4">
-          <StatCard label="Active SOC runs" value="12" trend="+4 this week" icon={Activity} />
-          <StatCard label="Findings open" value="38" trend="11 high confidence" icon={TriangleAlert} />
+          <StatCard label="Active missions" value="12" trend="+4 this week" icon={Activity} />
+          <StatCard label="Handoffs open" value="38" trend="11 high confidence" icon={TriangleAlert} />
           <StatCard label="Graph nodes" value="1,284" trend="Across 9 apps" icon={GitBranch} />
           <StatCard label="Verified fixes" value="76%" trend="+18% this month" icon={CheckCircle2} />
         </div>
@@ -150,12 +150,12 @@ export function AdminScreen() {
         <div className="grid grid-cols-12 gap-4">
           <section className="col-span-8 rounded-lg border border-border bg-bg-surface">
             <div className="border-b border-border px-5 py-4">
-            <h2 className="font-display text-base font-semibold">Security operations</h2>
+            <h2 className="font-display text-base font-semibold">AppSec orchestration</h2>
             </div>
             <table className="w-full text-left text-sm">
               <thead className="text-xs uppercase tracking-[0.16em] text-text-muted">
                 <tr className="border-b border-border">
-                  {["SOC run", "Status", "Agents", "Risk", "Updated"].map((head) => (
+                  {["Mission", "Status", "Agents", "Risk", "Updated"].map((head) => (
                     <th key={head} className="px-5 py-3 font-medium">{head}</th>
                   ))}
                 </tr>
@@ -174,7 +174,7 @@ export function AdminScreen() {
             </table>
           </section>
           <section className="col-span-4 rounded-lg border border-border bg-bg-surface p-5">
-            <h2 className="font-display text-base font-semibold">Run rules</h2>
+            <h2 className="font-display text-base font-semibold">Mission rules</h2>
             <div className="mt-4 space-y-3">
               {["Owned scope required", "Rate limits enforced", "Destructive checks off", "Owner approval before execution"].map((item) => (
                 <div key={item} className="flex items-center gap-3 rounded-lg bg-bg-elevated px-3 py-2">
@@ -192,21 +192,21 @@ export function AdminScreen() {
 
 export function BillingScreen() {
   const invoices = [
-    ["INV-2026-05", "May SOC runs", "$1,820.00", "Paid"],
-    ["INV-2026-04", "April SOC runs", "$1,395.50", "Paid"],
-    ["INV-2026-03", "March SOC runs", "$1,104.80", "Paid"],
+    ["INV-2026-05", "May AppSec missions", "$1,820.00", "Paid"],
+    ["INV-2026-04", "April AppSec missions", "$1,395.50", "Paid"],
+    ["INV-2026-03", "March AppSec missions", "$1,104.80", "Paid"],
   ];
 
   return (
     <PortfolioShell active="Billing">
-      <PageHeader title="Billing & Usage" description="Agent minutes, SOC runs, evidence storage, invoices, and budget limits." action="Update Plan" />
+      <PageHeader title="Billing & Usage" description="Agent minutes, AppSec missions, evidence storage, invoices, and budget limits." action="Update Plan" />
       <div className="grid grid-cols-12 gap-4 p-8">
         <section className="col-span-5 rounded-lg border border-border bg-bg-surface p-5">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.18em] text-text-muted">Current plan</p>
-              <h2 className="mt-2 font-display text-3xl font-semibold">Security Ops</h2>
-              <p className="mt-1 text-sm text-text-muted">For teams running agent-assisted security operations every week.</p>
+              <h2 className="mt-2 font-display text-3xl font-semibold">AppSec Orchestration</h2>
+              <p className="mt-1 text-sm text-text-muted">For teams running graph-backed, agent-assisted AppSec work every week.</p>
             </div>
             <WalletCards className="h-5 w-5 text-accent" />
           </div>
@@ -229,7 +229,7 @@ export function BillingScreen() {
           </div>
         </section>
         <section className="col-span-12 grid grid-cols-3 gap-4">
-          <StatCard label="Agent minutes" value="1,940" trend="62% of budget" icon={Activity} />
+          <StatCard label="Agent minutes" value="1,940" trend="62% of mission budget" icon={Activity} />
           <StatCard label="Evidence retention" value="365d" trend="Encrypted archive" icon={FileClock} />
           <StatCard label="Payment method" value="4242" trend="Visa on file" icon={CreditCard} />
         </section>
@@ -248,7 +248,7 @@ export function TeamScreen() {
 
   return (
     <PortfolioShell active="Team">
-      <PageHeader title="Team & Access" description="Set alert owners, incident reviewers, and scope approvers." action="Add Member" />
+      <PageHeader title="Team & Access" description="Set service owners, AppSec reviewers, mission approvers, and handoff roles." action="Add Member" />
       <div className="grid grid-cols-12 gap-4 p-8">
         <section className="col-span-8 rounded-lg border border-border bg-bg-surface">
           <div className="border-b border-border px-5 py-4">
@@ -269,7 +269,7 @@ export function TeamScreen() {
         <section className="col-span-4 rounded-lg border border-border bg-bg-surface p-5">
           <h2 className="font-display text-base font-semibold">Approval Rules</h2>
           <div className="mt-4 space-y-3">
-            {["High severity findings require security lead review", "External URL scopes require admin approval", "Fix verification must include test evidence"].map((item) => (
+            {["High severity handoffs require security lead review", "External URL scopes require admin approval", "Fix verification must include test evidence"].map((item) => (
               <p key={item} className="rounded-lg bg-bg-elevated p-3 text-sm text-text-secondary">{item}</p>
             ))}
           </div>
@@ -281,17 +281,17 @@ export function TeamScreen() {
 
 export function IntegrationsScreen() {
   const integrations: Array<[string, string, LucideIcon]> = [
-    ["GitHub", "Code context, ownership, and issue handoff", GitBranch],
-    ["CrowdStrike", "Endpoint signals and case context", ShieldCheck],
-    ["Microsoft Sentinel", "SIEM alerts and incident queue", Fingerprint],
-    ["Jira", "Response tasks and owner sync", PlugZap],
-    ["Postgres", "App data context for investigations", Database],
-    ["Stripe", "Payment event context for fraud and abuse cases", ReceiptText],
+    ["GitHub", "First connector for code context, ownership, and issue handoff", GitBranch],
+    ["CrowdStrike", "Roadmap connector for endpoint evidence and case context", ShieldCheck],
+    ["Microsoft Sentinel", "Roadmap connector for SIEM alerts and incident queue context", Fingerprint],
+    ["Jira", "Roadmap connector for response tasks and owner sync", PlugZap],
+    ["Postgres", "Roadmap connector for app data context during investigations", Database],
+    ["Stripe", "Roadmap connector for payment event context in abuse cases", ReceiptText],
   ];
 
   return (
     <PortfolioShell active="Integrations">
-      <PageHeader title="Integrations" description="Connect SIEM, EDR, source control, ticketing, evidence storage, and ownership data." action="Connect Source" />
+      <PageHeader title="Integrations" description="GitHub is the first evidence source; SIEM, EDR, cloud, ticketing, and storage follow the same orchestration pattern." action="Connect Source" />
       <div className="grid grid-cols-3 gap-4 p-8">
         {integrations.map(([name, description, Icon]) => {
           const IntegrationIcon = Icon as LucideIcon;
@@ -312,7 +312,7 @@ export function IntegrationsScreen() {
 export function AuditScreen() {
   return (
     <PortfolioShell active="Audit">
-      <PageHeader title="Audit Trail" description="Scope changes, agent actions, evidence, work item creation, and response review." action="Export Evidence" />
+      <PageHeader title="Audit Trail" description="Scope changes, agent actions, graph updates, evidence, owner handoff, and review decisions." action="Export Evidence" />
       <div className="grid grid-cols-12 gap-4 p-8">
         <section className="col-span-8 rounded-lg border border-border bg-bg-surface p-5">
           <h2 className="font-display text-base font-semibold">Event stream</h2>
@@ -329,7 +329,7 @@ export function AuditScreen() {
         <section className="col-span-4 rounded-lg border border-border bg-bg-surface p-5">
           <h2 className="font-display text-base font-semibold">Control mapping</h2>
           <div className="mt-4 space-y-3">
-            {["ASVS mapped findings", "CWE attached where relevant", "KEV enrichment enabled", "Reviewer approval retained"].map((item) => (
+            {["ASVS mapped handoffs", "CWE attached where relevant", "KEV enrichment enabled", "Reviewer approval retained"].map((item) => (
               <div key={item} className="flex items-center gap-3 rounded-lg bg-bg-elevated px-3 py-2">
                 <CheckCircle2 className="h-4 w-4 text-accent" />
                 <span className="text-sm text-text-secondary">{item}</span>
@@ -345,7 +345,7 @@ export function AuditScreen() {
 export function SettingsScreen() {
   return (
     <PortfolioShell active="Settings">
-      <PageHeader title="Settings" description="Authentication, scope policy, run defaults, and evidence retention." action="Save Changes" />
+      <PageHeader title="Settings" description="Authentication, scope policy, mission defaults, graph context, and evidence retention." action="Save Changes" />
       <div className="grid grid-cols-12 gap-4 p-8">
         <section className="col-span-6 rounded-lg border border-border bg-bg-surface p-5">
           <h2 className="font-display text-base font-semibold">Authentication</h2>
@@ -369,12 +369,12 @@ export function SettingsScreen() {
           </div>
         </section>
         <section className="col-span-6 rounded-lg border border-border bg-bg-surface p-5">
-          <h2 className="font-display text-base font-semibold">Run defaults</h2>
+          <h2 className="font-display text-base font-semibold">Mission defaults</h2>
           <div className="mt-4 space-y-3 text-sm text-text-secondary">
-            <p>Human approval is required before response actions run.</p>
+            <p>Human approval is required before agent execution and owner handoff.</p>
             <p>Request rate is capped at 30 rpm unless an admin lowers it.</p>
             <p>Evidence retention is 365 days for paid workspaces.</p>
-            <p>External systems require explicit scope approval.</p>
+            <p>External systems require explicit scope approval before they enter the graph.</p>
           </div>
         </section>
       </div>
@@ -391,10 +391,10 @@ export function LoginScreen() {
         </div>
         <div>
           <h1 className="mt-10 max-w-xl text-4xl font-semibold leading-tight tracking-normal sm:text-5xl">
-            Agentic SOC for teams that still want control.
+            Agentic AppSec for teams that still want control.
           </h1>
           <p className="mt-5 max-w-lg text-sm leading-6 text-text-secondary">
-            Northwall gives security teams an agent crew for alert triage, investigation graphs, response plans, and owner handoff.
+            Northwall gives security teams a specialist agent crew for AppSec graph building, parallel investigation, approved execution, and owner handoff.
           </p>
         </div>
         <p className="mt-8 text-xs text-text-muted">Human approval stays in the loop. Scope is checked before a run starts.</p>

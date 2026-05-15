@@ -3,9 +3,23 @@ import { ArrowUpRight } from "lucide-react";
 import { NorthwallLogo, NorthwallMark } from "@/components/logo";
 
 const steps = [
-  ["01", "Connect source", "GitHub repo, branch, owners, CI, and package context."],
-  ["02", "Review plan", "Agent team, task order, evidence goals, and approval notes."],
-  ["03", "Create issues", "Approved findings become owner-ready GitHub work items."],
+  ["01", "Build graph", "GitHub repo, branch, owners, routes, packages, auth, config, and CI."],
+  ["02", "Approve mission", "Agent team, task order, evidence goals, and approval notes."],
+  ["03", "Send handoffs", "Approved AppSec evidence becomes owner-ready remediation work."],
+];
+
+const advantages = [
+  ["Agentic execution", "Run governed AppSec missions instead of collecting another passive queue."],
+  ["Multi-agent orchestration", "Review named agents, responsibilities, dependencies, and approval gates before execution."],
+  ["Parallel MoE specialists", "Route work to focused agents for auth, dependencies, ownership, config, CI, and threat context."],
+  ["AppSec knowledge graph", "Map services, routes, owners, packages, controls, evidence, and remediation work together."],
+];
+
+const agents = [
+  ["System Cartographer", "Builds the AppSec graph across source, routes, packages, owners, controls, and CI."],
+  ["Auth Boundary Agent", "Reviews session, tenant, middleware, and permission-sensitive paths."],
+  ["Dependency Analyst", "Checks package and lockfile exposure against release and ownership context."],
+  ["Response Handoff Agent", "Turns evidence into owner-ready work with verification steps."],
 ];
 
 function SignalField() {
@@ -65,12 +79,12 @@ export default function LandingPage() {
           <SignalField />
 
           <div className="grid min-h-0 md:grid-cols-[1fr_380px] xl:grid-cols-[1fr_430px]">
-            <section className="px-5 py-10 sm:px-10 sm:py-14 lg:px-14">
-              <h1 className="max-w-4xl font-serif text-[3.2rem] font-normal leading-[0.93] text-[#051914] sm:text-[5.5rem] lg:text-[6.7rem] xl:text-[7.4rem]">
-                Turn SOC alerts into owner-ready work.
+            <section className="px-5 py-8 sm:px-10 sm:py-10 lg:px-14 lg:py-10">
+              <h1 className="max-w-4xl font-serif text-[3.2rem] font-normal leading-[0.93] text-[#051914] sm:text-[4.8rem] lg:text-[4.8rem] xl:text-[6.2rem]">
+                Orchestrate AppSec work with specialist AI agents.
               </h1>
               <p className="mt-7 max-w-2xl text-base leading-7 text-[#31413b] sm:text-lg lg:text-xl lg:leading-8">
-                Northwall runs specialist agents across source context, evidence, and ownership. Analysts approve the plan before issues are created.
+                Northwall builds a graph of your application, dispatches parallel security agents, and turns approved evidence into owner-ready remediation work.
               </p>
             </section>
 
@@ -99,6 +113,44 @@ export default function LandingPage() {
               </article>
             ))}
           </section>
+        </div>
+      </section>
+
+      <section className="border-t border-[#dfe4dd] bg-[#fbfcfa] px-5 py-14 sm:px-10 lg:px-14">
+        <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <p className="font-display text-xs uppercase tracking-[0.18em] text-[#68736d]">Why Northwall</p>
+            <h2 className="mt-4 max-w-xl font-serif text-4xl font-normal leading-tight text-[#051914] sm:text-5xl">
+              Scanners produce queues. Northwall runs missions.
+            </h2>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {advantages.map(([title, body]) => (
+              <article key={title} className="border border-[#dfe4dd] bg-white p-5">
+                <h3 className="text-sm font-semibold text-[#051914]">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-[#53615b]">{body}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-[#dfe4dd] bg-white px-5 py-14 sm:px-10 lg:px-14">
+        <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <p className="font-display text-xs uppercase tracking-[0.18em] text-[#68736d]">Agent team</p>
+            <h2 className="mt-4 max-w-xl font-serif text-4xl font-normal leading-tight text-[#051914] sm:text-5xl">
+              Parallel specialists, approved before they execute.
+            </h2>
+          </div>
+          <div className="grid gap-3">
+            {agents.map(([title, body]) => (
+              <article key={title} className="grid gap-3 border-b border-[#dfe4dd] pb-4 sm:grid-cols-[210px_1fr]">
+                <h3 className="text-sm font-semibold text-[#051914]">{title}</h3>
+                <p className="text-sm leading-6 text-[#53615b]">{body}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
     </main>

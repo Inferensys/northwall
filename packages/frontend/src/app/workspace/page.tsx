@@ -36,14 +36,14 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:400
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === "true";
 
 const phases: Array<{ id: AssessmentPhase; label: string }> = [
-  { id: "connect_repo", label: "Connect source" },
+  { id: "connect_repo", label: "Connect evidence source" },
   { id: "repo_selected", label: "Source selected" },
-  { id: "understanding", label: "Context built" },
-  { id: "plan_ready", label: "Plan approval" },
+  { id: "understanding", label: "Graph built" },
+  { id: "plan_ready", label: "Agent plan approval" },
   { id: "approved", label: "Approved" },
-  { id: "running", label: "Execution" },
-  { id: "findings_ready", label: "Findings" },
-  { id: "issues_created", label: "Issues" },
+  { id: "running", label: "Specialist execution" },
+  { id: "findings_ready", label: "Owner handoffs" },
+  { id: "issues_created", label: "Work sent" },
 ];
 
 const severityStyles: Record<VulnerabilityFinding["severity"], string> = {
@@ -273,7 +273,7 @@ export default function Home() {
         body: JSON.stringify({ findingIds: Array.from(selectedFindingIds) }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Could not create issues");
+      if (!res.ok) throw new Error(data.error ?? "Could not send handoffs");
       setAssessment(data.assessment);
       setEvents(data.assessment.events ?? []);
     } catch (err) {
@@ -292,12 +292,12 @@ export default function Home() {
           <NorthwallLogo className="text-xl" />
           <div className="hidden h-6 w-px bg-border sm:block" />
           <div className="hidden text-xs text-text-muted sm:block">
-            Agentic SOC workspace
+            Agentic AppSec mission workspace
           </div>
         </div>
         <div className="hidden w-full max-w-lg items-center gap-2 rounded-md border border-border bg-bg-elevated px-3 py-1.5 text-sm text-text-muted md:flex">
           <Search className="h-4 w-4" />
-          Search alerts, entities, code paths, findings
+          Search sources, graph nodes, agents, handoffs
         </div>
         <div className="flex items-center gap-3 text-sm">
           <span className={cn("rounded-md border px-2.5 py-1 font-medium", connection?.connected ? "border-[#b8d8c7] bg-[#ecf6f0] text-[#0b6b49]" : "border-border bg-bg-elevated text-text-secondary")}>
@@ -310,10 +310,10 @@ export default function Home() {
         <nav className="hidden border-r border-[#102a22] bg-[#051914] py-3 lg:flex lg:flex-col lg:items-center lg:gap-2">
           {[
             { label: "Sources", icon: Github },
-            { label: "Investigation graph", icon: Network },
-            { label: "Plan", icon: ShieldCheck },
-            { label: "Run log", icon: SquareKanban },
-            { label: "Work items", icon: GitPullRequest },
+            { label: "AppSec graph", icon: Network },
+            { label: "Agent plan", icon: ShieldCheck },
+            { label: "Mission log", icon: SquareKanban },
+            { label: "Owner handoffs", icon: GitPullRequest },
           ].map(({ label, icon: Icon }, index) => (
             <button
               key={label}
@@ -335,7 +335,7 @@ export default function Home() {
               className="flex w-full items-center justify-center gap-2 rounded-md bg-accent px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
             >
               {busy === "connect" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Github className="h-4 w-4" />}
-              {connection?.connected ? "Refresh GitHub source" : "Connect GitHub source"}
+              {connection?.connected ? "Refresh GitHub source" : "Connect GitHub evidence source"}
             </button>
             {connection?.connected && (
               <button
@@ -349,13 +349,13 @@ export default function Home() {
 
           <div className="border-b border-border p-4">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-text-muted">Signal source</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-text-muted">Evidence source</h2>
               <span className="text-xs text-text-muted">{repos.length} repos</span>
             </div>
             <div className="max-h-64 space-y-1 overflow-auto">
               {repos.length === 0 ? (
                 <p className="rounded-md bg-bg-elevated p-3 text-sm leading-5 text-text-muted">
-                  Connect GitHub to load source context.
+                  Connect GitHub to load source, ownership, dependency, and CI context.
                 </p>
               ) : repos.map((repo) => (
                 <button
@@ -389,7 +389,7 @@ export default function Home() {
                   className="flex w-full items-center justify-center gap-2 rounded-md bg-accent px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
                 >
                   {busy === "create" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-                  Start SOC run
+                  Start AppSec mission
                 </button>
               </div>
             )}
@@ -427,38 +427,38 @@ export default function Home() {
                 {assessment?.repository.fullName ?? selectedRepo?.fullName ?? "No source selected"}
               </div>
               <h1 className="text-2xl font-semibold tracking-normal text-text-primary">
-                Agentic SOC run
+                Agentic AppSec mission
               </h1>
               <p className="mt-1 text-sm text-text-secondary">
-                Build context, assign agents, approve the response plan, then send the work to owners.
+                Build the AppSec graph, approve the specialist agent plan, run parallel investigation, then send the work to owners.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <ActionButton label="Build context" busy={busy === "understand"} disabled={!assessment || assessment.phase !== "repo_selected"} onClick={() => runStep("understand")} />
-              <ActionButton label="Draft plan" busy={busy === "plan"} disabled={!assessment || assessment.phase !== "understanding"} onClick={() => runStep("plan")} />
-              <ActionButton label="Approve" busy={busy === "approve"} disabled={!assessment || assessment.phase !== "plan_ready"} onClick={() => runStep("approve")} />
-              <ActionButton label="Run" icon={Play} busy={busy === "run"} disabled={!assessment || assessment.phase !== "approved"} onClick={() => runStep("run")} />
-              <ActionButton label="Create work items" icon={GitPullRequest} busy={busy === "issues"} disabled={!assessment || selectedFindingIds.size === 0 || !["findings_ready", "issues_created"].includes(assessment.phase)} onClick={createIssues} />
+              <ActionButton label="Build graph" busy={busy === "understand"} disabled={!assessment || assessment.phase !== "repo_selected"} onClick={() => runStep("understand")} />
+              <ActionButton label="Draft agent plan" busy={busy === "plan"} disabled={!assessment || assessment.phase !== "understanding"} onClick={() => runStep("plan")} />
+              <ActionButton label="Approve plan" busy={busy === "approve"} disabled={!assessment || assessment.phase !== "plan_ready"} onClick={() => runStep("approve")} />
+              <ActionButton label="Run specialists" icon={Play} busy={busy === "run"} disabled={!assessment || assessment.phase !== "approved"} onClick={() => runStep("run")} />
+              <ActionButton label="Send handoffs" icon={GitPullRequest} busy={busy === "issues"} disabled={!assessment || selectedFindingIds.size === 0 || !["findings_ready", "issues_created"].includes(assessment.phase)} onClick={createIssues} />
             </div>
           </div>
 
           <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-            <Panel title="Investigation graph" icon={Network}>
+            <Panel title="AppSec knowledge graph" icon={Network}>
               <KnowledgeGraphView assessment={assessment} />
             </Panel>
-            <Panel title="Agent task map" icon={Workflow}>
+            <Panel title="Parallel specialist map" icon={Workflow}>
               <TaskMap assessment={assessment} />
             </Panel>
-            <Panel title="Response plan" icon={ShieldCheck}>
+            <Panel title="Agent plan" icon={ShieldCheck}>
               <PlanReview assessment={assessment} />
             </Panel>
-            <Panel title="Live SOC run" icon={SquareKanban}>
+            <Panel title="Live AppSec mission" icon={SquareKanban}>
               <EventStream events={events} />
             </Panel>
           </div>
 
           <div className="mt-4 grid gap-4 2xl:grid-cols-[minmax(0,1fr)_420px]">
-            <Panel title="Findings and work items" icon={GitPullRequest}>
+            <Panel title="Owner handoffs" icon={GitPullRequest}>
               <FindingsTable
                 findings={assessment?.findings ?? []}
                 selected={selectedFindingIds}
@@ -467,7 +467,7 @@ export default function Home() {
                 onPreview={setPreviewFindingId}
               />
             </Panel>
-            <Panel title="Owner handoff preview" icon={GitPullRequest}>
+            <Panel title="Handoff preview" icon={GitPullRequest}>
               <IssuePreview finding={previewFinding} />
             </Panel>
           </div>
@@ -505,7 +505,7 @@ function ActionButton({
 function KnowledgeGraphView({ assessment }: { assessment: Assessment | null }) {
   const graph = assessment?.graph;
   if (!graph) {
-    return <EmptyState>Select a source and build context to map alerts, code paths, identities, services, and owners.</EmptyState>;
+    return <EmptyState>Select a source and build the graph to map routes, packages, auth boundaries, controls, owners, and remediation work.</EmptyState>;
   }
 
   return (
@@ -543,7 +543,7 @@ function KnowledgeGraphView({ assessment }: { assessment: Assessment | null }) {
 
 function TaskMap({ assessment }: { assessment: Assessment | null }) {
   const plan = assessment?.plan;
-  if (!plan) return <EmptyState>Draft a plan to see the agents, owners, and task order before the SOC run starts.</EmptyState>;
+  if (!plan) return <EmptyState>Draft an agent plan to see specialist roles, dependencies, and task order before the mission starts.</EmptyState>;
 
   return (
     <div className="p-4">
@@ -579,7 +579,7 @@ function TaskMap({ assessment }: { assessment: Assessment | null }) {
 }
 
 function PlanReview({ assessment }: { assessment: Assessment | null }) {
-  if (!assessment?.plan) return <EmptyState>The response plan appears here after Northwall builds the source context.</EmptyState>;
+  if (!assessment?.plan) return <EmptyState>The approval-gated agent plan appears here after Northwall builds the AppSec graph.</EmptyState>;
 
   return (
     <div className="p-4">
@@ -597,7 +597,7 @@ function PlanReview({ assessment }: { assessment: Assessment | null }) {
 }
 
 function EventStream({ events }: { events: AssessmentEvent[] }) {
-  if (events.length === 0) return <EmptyState>Run events appear here as agents triage signals, inspect context, and write findings.</EmptyState>;
+  if (events.length === 0) return <EmptyState>Mission events appear here as agents inspect context, run parallel checks, and write owner handoffs.</EmptyState>;
 
   return (
     <div className="max-h-[360px] overflow-auto p-4">
@@ -630,7 +630,7 @@ function FindingsTable({
   onPreview: (id: string) => void;
 }) {
   if (findings.length === 0) {
-    return <EmptyState>Run the approved plan to get findings and owner-ready work item drafts.</EmptyState>;
+    return <EmptyState>Run the approved agent plan to get owner-ready remediation handoffs.</EmptyState>;
   }
 
   function toggle(id: string) {
@@ -646,11 +646,11 @@ function FindingsTable({
         <thead className="border-b border-border bg-bg-elevated text-xs font-semibold uppercase tracking-wide text-text-muted">
           <tr>
             <th className="w-10 px-4 py-3" />
-            <th className="px-4 py-3">Finding</th>
+            <th className="px-4 py-3">Handoff</th>
             <th className="px-4 py-3">Severity</th>
             <th className="px-4 py-3">Confidence</th>
             <th className="px-4 py-3">Evidence</th>
-            <th className="px-4 py-3">Work item</th>
+            <th className="px-4 py-3">Owner work</th>
             <th className="px-4 py-3" />
           </tr>
         </thead>
@@ -712,13 +712,13 @@ function FindingsTable({
 
 function IssuePreview({ finding }: { finding: VulnerabilityFinding | null }) {
   if (!finding) {
-    return <EmptyState>Select a finding to read the owner handoff before Northwall creates it.</EmptyState>;
+    return <EmptyState>Select a handoff to review the owner-ready work before Northwall sends it.</EmptyState>;
   }
 
   return (
     <div className="p-4">
       <div className="mb-4 flex flex-wrap gap-2">
-        {["northwall", "agentic-soc", "security-operations", finding.severity, finding.confidence, ...finding.labels].filter(Boolean).map((label) => (
+        {["northwall", "agentic-appsec", "appsec-orchestration", finding.severity, finding.confidence, ...finding.labels].filter(Boolean).map((label) => (
           <span key={label} className="rounded-md border border-border bg-bg-elevated px-2 py-1 text-xs font-medium text-text-secondary">
             {label}
           </span>

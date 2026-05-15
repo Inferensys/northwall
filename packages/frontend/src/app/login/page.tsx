@@ -25,14 +25,14 @@ export default async function LoginPage() {
             <NorthwallLogo className="text-2xl" />
           </div>
           <h1 className="max-w-2xl text-4xl font-semibold tracking-normal text-[#051914]">
-            Agentic SOC, starting with real context.
+            Agentic AppSec orchestration, starting with real source context.
           </h1>
           <p className="mt-4 max-w-xl text-base leading-7 text-[#31413b]">
-            Northwall brings agents into security operations: triage alerts, build the investigation graph, draft the response plan, and send the work to the right owner.
+            Northwall builds an AppSec graph, dispatches specialist agents across code and ownership context, and sends approved remediation work to the right owner.
           </p>
           <div className="mt-8 grid max-w-2xl gap-3 text-sm text-[#31413b] sm:grid-cols-3">
-            <div className="rounded-md border border-[#d9ded7] bg-white p-4">SOC triage</div>
-            <div className="rounded-md border border-[#d9ded7] bg-white p-4">Agent graph</div>
+            <div className="rounded-md border border-[#d9ded7] bg-white p-4">Agent missions</div>
+            <div className="rounded-md border border-[#d9ded7] bg-white p-4">AppSec graph</div>
             <div className="rounded-md border border-[#d9ded7] bg-white p-4">Owner handoff</div>
           </div>
         </section>
@@ -41,7 +41,7 @@ export default async function LoginPage() {
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-[#051914]">Sign in</h2>
             <p className="mt-1 text-sm text-[#77827d]">
-              GitHub is the first connector for code context and remediation work items.
+              GitHub is the first connector for source context and approved remediation work.
             </p>
           </div>
           <LoginButton />

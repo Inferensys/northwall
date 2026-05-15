@@ -112,7 +112,7 @@ export function validateScopeGate(scope: EngagementScope): ScopeGateResult {
   if (!scope.ownedEnvironment) reasons.push("Target must be an owned or explicitly authorized environment.");
   if (!scope.authorizationConfirmed) reasons.push("Authorization must be confirmed before execution.");
   if (scope.thirdPartyTargets) reasons.push("Third-party targets are outside scope.");
-  if (scope.destructiveTesting) reasons.push("Destructive testing is disabled for safe SOC runs.");
+  if (scope.destructiveTesting) reasons.push("Destructive testing is disabled for safe AppSec missions.");
   if (scope.targetType === "staging-url" && scope.allowedHosts.length === 0) {
     reasons.push("Staging URL runs require at least one allowed host.");
   }

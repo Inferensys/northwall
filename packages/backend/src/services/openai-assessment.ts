@@ -58,9 +58,9 @@ export class OpenAIAssessmentService {
     if (!this.client) return fallbackPlan(input);
 
     const prompt = [
-      "You are Northwall, a defensive Agentic SOC planning system for owned environments.",
+      "You are Northwall, a defensive Agentic AppSec orchestration system for owned environments.",
       "Return only JSON with keys: summary, agents, tasks, approvalNotes.",
-      "Treat the GitHub repository as one context source for a security operations run: code ownership, vulnerable paths, response handoff, and evidence.",
+      "Treat the GitHub repository as the first evidence source for an AppSec mission: code ownership, vulnerable paths, graph context, remediation handoff, and evidence.",
       "Keep all checks static, dependency, triage, and investigation oriented. Do not include exploit payloads, third-party scanning, credential collection, persistence, or destructive tests.",
       "Agents need id, name, title, focus, status. Tasks need id, title, agentId, dependsOn, status, evidence.",
       "",
@@ -85,11 +85,11 @@ export class OpenAIAssessmentService {
     if (!this.client) return fallbackFindings(input);
 
     const prompt = [
-      "You are Northwall, a defensive Agentic SOC evidence reviewer.",
-      "Given a repository inventory and investigation graph, produce security-operations findings only when evidence is concrete.",
+      "You are Northwall, a defensive Agentic AppSec evidence reviewer.",
+      "Given a repository inventory and AppSec knowledge graph, produce owner handoffs only when evidence is concrete.",
       "Return only JSON with key findings. Each finding needs id, title, severity, confidence, status, affectedNodes, evidence, impact, remediation, labels, issueTitle, issueBody.",
       "Evidence items need path, optional line, optional excerpt. Do not reveal secret values; describe config references without copying values.",
-      "Write findings as owner handoffs for alert triage, threat investigation, response planning, or remediation. Keep human approval in the loop.",
+      "Write findings as owner handoffs for AppSec triage, specialist investigation, response planning, or remediation. Keep human approval in the loop.",
       "",
       JSON.stringify(input, null, 2),
     ].join("\n");
@@ -111,7 +111,7 @@ export class OpenAIAssessmentService {
 function normalizePlan(plan: AssessmentPlan, input: PlanningInput): AssessmentPlan {
   if (!plan.agents?.length || !plan.tasks?.length) return fallbackPlan(input);
   return {
-    summary: plan.summary || `Run an Agentic SOC investigation on ${input.repo.fullName}: map context, triage risk, plan response, and prepare owner handoff.`,
+    summary: plan.summary || `Run an Agentic AppSec mission on ${input.repo.fullName}: map graph context, triage risk, plan specialist work, and prepare owner handoff.`,
     agents: plan.agents.map((agent) => ({
       ...agent,
       status: agent.status ?? "queued",
@@ -142,11 +142,11 @@ function normalizeFindings(findings: VulnerabilityFinding[], input: PlanningInpu
 
 function fallbackPlan(input: PlanningInput): AssessmentPlan {
   return {
-    summary: `Run an Agentic SOC investigation on ${input.repo.fullName} (${input.branch}): build context, triage risk, review sensitive paths, and prepare owner-ready work items.`,
+    summary: `Run an Agentic AppSec mission on ${input.repo.fullName} (${input.branch}): build graph context, triage risk, run specialist reviews, and prepare owner-ready work items.`,
     agents: [
-      { id: "cartographer", name: "Rhea", title: "Incident Cartographer", focus: "Map services, owners, auth boundaries, config, CI, and dependency surfaces.", status: "queued" },
-      { id: "triage-agent", name: "Kade", title: "Alert Triage Agent", focus: "Separate weak signals from issues that need investigation or owner action.", status: "queued" },
-      { id: "threat-investigator", name: "Mira", title: "Threat Investigator", focus: "Review sensitive paths, dependency context, and likely blast radius.", status: "queued" },
+      { id: "cartographer", name: "Rhea", title: "System Cartographer", focus: "Map services, owners, auth boundaries, config, CI, and dependency surfaces.", status: "queued" },
+      { id: "triage-agent", name: "Kade", title: "AppSec Triage Agent", focus: "Separate weak signals from issues that need investigation or owner action.", status: "queued" },
+      { id: "threat-investigator", name: "Mira", title: "Specialist Investigator", focus: "Review sensitive paths, dependency context, and likely blast radius.", status: "queued" },
       { id: "handoff-writer", name: "Nova", title: "Response Handoff Writer", focus: "Convert evidence into owner-ready work item drafts with verification steps.", status: "queued" },
     ],
     tasks: [
@@ -156,7 +156,7 @@ function fallbackPlan(input: PlanningInput): AssessmentPlan {
       { id: "t4", title: "Prepare owner handoff drafts", agentId: "handoff-writer", dependsOn: ["t2", "t3"], status: "queued", evidence: [] },
     ],
     approvalNotes: [
-      "Only safe triage, static, dependency, and owner-handoff checks will run.",
+      "Only safe graph building, static, dependency, and owner-handoff checks will run.",
       "No third-party hosts, destructive actions, credential collection, or exploit payload output.",
       "Human approval is required before creating work items.",
     ],
@@ -169,7 +169,7 @@ function fallbackFindings(input: PlanningInput): VulnerabilityFinding[] {
   if (input.inventory.authFiles.length > 0 && input.inventory.routes.length > 0) {
     findings.push({
       id: "BG-101",
-      title: "Auth-sensitive route belongs in the SOC response queue",
+      title: "Auth-sensitive route belongs in the AppSec owner queue",
       severity: "high",
       confidence: "medium",
       status: "open",
@@ -180,8 +180,8 @@ function fallbackFindings(input: PlanningInput): VulnerabilityFinding[] {
       ],
       impact: "The route and auth-sensitive code sit in the same request path; the owning team should confirm exposure before the case closes.",
       remediation: "Assign the owner, add tests for cross-tenant access, and verify every route derives tenant/workspace from the authenticated session.",
-      labels: ["soc", "backend"],
-      issueTitle: "[Northwall] SOC handoff: review auth-sensitive route ownership",
+      labels: ["appsec", "backend"],
+      issueTitle: "[Northwall] AppSec handoff: review auth-sensitive route ownership",
       issueBody: "",
     });
   }
@@ -189,7 +189,7 @@ function fallbackFindings(input: PlanningInput): VulnerabilityFinding[] {
   if (input.inventory.packageFiles.length > 0) {
     findings.push({
       id: "BG-102",
-      title: "Dependency signal needs SOC triage before release",
+      title: "Dependency signal needs AppSec triage before release",
       severity: input.inventory.dependencies.length > 50 ? "medium" : "low",
       confidence: "high",
       status: "open",
@@ -197,8 +197,8 @@ function fallbackFindings(input: PlanningInput): VulnerabilityFinding[] {
       evidence: input.inventory.packageFiles.map((file) => ({ path: file })).slice(0, 4),
       impact: "Deployable packages should be checked for known advisories and lockfile drift before the change moves into the incident path.",
       remediation: "Run dependency audit in CI, pin patched versions, and fail builds on known vulnerable production dependencies.",
-      labels: ["soc", "dependencies"],
-      issueTitle: "[Northwall] SOC handoff: review production dependency risk",
+      labels: ["appsec", "dependencies"],
+      issueTitle: "[Northwall] AppSec handoff: review production dependency risk",
       issueBody: "",
     });
   }
@@ -214,8 +214,8 @@ function fallbackFindings(input: PlanningInput): VulnerabilityFinding[] {
       evidence: input.inventory.configFiles.map((file) => ({ path: file })).slice(0, 4),
       impact: "Configuration and environment files define sensitive runtime behavior and can change the response path.",
       remediation: "Keep example env files value-free, enforce secret scanning in CI, and document required runtime secrets separately.",
-      labels: ["soc", "config"],
-      issueTitle: "[Northwall] SOC handoff: review runtime configuration",
+      labels: ["appsec", "config"],
+      issueTitle: "[Northwall] AppSec handoff: review runtime configuration",
       issueBody: "",
     });
   }

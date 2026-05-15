@@ -16,9 +16,9 @@ const brandMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Northwall — Agentic SOC platform",
+  title: "Northwall - Agentic AppSec orchestration",
   description:
-    "Multi-agent security operations for alert triage, investigation graphs, response plans, and remediation work items.",
+    "Specialist AI agents, AppSec knowledge graphs, parallel investigation, and approved owner handoff.",
   icons: [{ rel: "icon", url: "/favicon.svg", type: "image/svg+xml" }],
 };
 
