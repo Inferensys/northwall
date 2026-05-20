@@ -102,11 +102,11 @@ export class AssessmentManager {
     }
 
     this.setPhase(assessment, "understanding");
-    this.emit(id, "understanding_started", "Building investigation context from source, ownership, and security-sensitive surfaces");
+    this.emit(id, "understanding_started", "Building AppSec graph context from source, ownership, dependencies, and security-sensitive surfaces");
     const token = await this.requireToken(userId);
     const snapshot = await this.analyzer.analyze(token, assessment.repository, assessment.branch);
     this.applySnapshot(assessment, snapshot);
-    this.emit(id, "graph_updated", `Mapped ${snapshot.graph.nodes.length} investigation graph nodes from ${snapshot.inventory.files} files`, {
+    this.emit(id, "graph_updated", `Mapped ${snapshot.graph.nodes.length} AppSec graph nodes from ${snapshot.inventory.files} files`, {
       nodes: snapshot.graph.nodes.length,
       edges: snapshot.graph.edges.length,
     });
@@ -128,7 +128,7 @@ export class AssessmentManager {
     });
     assessment.plan = plan;
     this.setPhase(assessment, "plan_ready");
-    this.emit(id, "plan_ready", `Response plan ready with ${plan.agents.length} agents and ${plan.tasks.length} tasks`);
+    this.emit(id, "plan_ready", `Agent plan ready with ${plan.agents.length} specialists and ${plan.tasks.length} tasks`);
     await this.save(id);
     return assessment;
   }
@@ -140,7 +140,7 @@ export class AssessmentManager {
     }
 
     this.setPhase(assessment, "approved");
-    this.emit(id, "plan_approved", "SOC response plan approved for safe execution");
+    this.emit(id, "plan_approved", "AppSec agent plan approved for safe execution");
     await this.save(id);
     return assessment;
   }
@@ -152,7 +152,7 @@ export class AssessmentManager {
     }
 
     this.setPhase(assessment, "running");
-    this.emit(id, "run_started", "Starting agentic SOC run");
+    this.emit(id, "run_started", "Starting agentic AppSec mission");
 
     for (const agent of assessment.plan.agents) {
       agent.status = "working";
@@ -195,7 +195,7 @@ export class AssessmentManager {
   async createIssues(id: string, userId: string, findingIds: string[]): Promise<Assessment> {
     const assessment = this.requireOwnedAssessment(id, userId);
     if (assessment.phase !== "findings_ready" && assessment.phase !== "issues_created") {
-      throw new Error("Issues can only be created after findings are ready.");
+      throw new Error("Owner handoffs can only be sent after they are ready.");
     }
     if (findingIds.length === 0) throw new Error("Select at least one finding.");
 

@@ -70,7 +70,7 @@ describe("GitHub issue payload", () => {
     };
 
     const payload = buildGitHubIssuePayload(finding);
-    expect(payload.labels).toEqual(["northwall", "agentic-soc", "security-operations", "high", "backend"]);
+    expect(payload.labels).toEqual(["northwall", "agentic-appsec", "appsec-orchestration", "high", "backend"]);
   });
 });
 

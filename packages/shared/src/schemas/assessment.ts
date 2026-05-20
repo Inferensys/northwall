@@ -205,6 +205,6 @@ export function buildGitHubIssuePayload(finding: VulnerabilityFinding): {
   return {
     title: finding.issueTitle,
     body: finding.issueBody,
-    labels: Array.from(new Set(["northwall", "agentic-soc", "security-operations", finding.severity, finding.confidence, ...finding.labels])),
+    labels: Array.from(new Set(["northwall", "agentic-appsec", "appsec-orchestration", finding.severity, finding.confidence, ...finding.labels])),
   };
 }
